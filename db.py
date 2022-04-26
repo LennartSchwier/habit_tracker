@@ -153,12 +153,12 @@ def __is_habit_item_stored(db, name, user_name):
     return len(cur.fetchall()) != 0
 
 
-debug_db = get_db(":memory:n")
+# debug_db = get_db(":memory:n")
 
 # store_habit_item(debug_db, "debug 1", "user1", 4, "tomorrow")
 # store_habit_item(debug_db, "debug 2", "user1", 6, "today")
 # print(get_all_habit_items(debug_db, "user1"))
 
-store_user_item(debug_db, "debug user", "some password", "False")
-store_user_item(debug_db, "debug admin", "some password", "True")
-print(get_all_user_items(debug_db))
+# store_user_item(debug_db, "debug user", "some password", "False")
+# store_user_item(debug_db, "debug admin", "some password", "True")
+# print(get_all_user_items(debug_db))
