@@ -2,7 +2,7 @@ import questionary
 import hashlib
 from db_logic import connect_to_db, add_habit, remove_habit, \
     update_habit_streaks, get_habit_by_name, get_all_habits
-from user_logic import add_user, get_user_by_name, validate_password
+from user_logic import add_user, get_user_by_name, validate_password, get_all_users, remove_user
 from analysis import analyse_habits
 from custom_exceptions import HabitSaveError, HabitDeletionError
 from habit import Habit
@@ -17,20 +17,34 @@ custom_style = questionary.Style([
 
 stop = False
 enter = False
-active_user = ""
+logged_in_as = ""
 
 
 def cli():
-    db = connect_to_db("main.db")  # ":memory:"
+    db = connect_to_db(":memory:")  # ":memory:"
 
-    # cur = db.cursor()
-    # cur.execute("""INSERT INTO users VALUES (:user_id, :user_name, :password, :is_admin)""",
-    #             {
-    #                 "user_id": "some id",
-    #                 "user_name": "admin",
-    #                 "password": "debug",
-    #                 "is_admin": "True"
-    #             })
+    cur = db.cursor()
+    cur.execute("""INSERT INTO users VALUES (:user_id, :user_name, :password, :is_admin)""",
+                {
+                    "user_id": "some id",
+                    "user_name": "some user",
+                    "password": "some password",
+                    "is_admin": "False"
+                })
+    cur.execute("""INSERT INTO users VALUES (:user_id, :user_name, :password, :is_admin)""",
+                {
+                    "user_id": "some id",
+                    "user_name": "other user",
+                    "password": "user password",
+                    "is_admin": "False"
+                })
+    cur.execute("""INSERT INTO users VALUES (:user_id, :user_name, :password, :is_admin)""",
+                {
+                    "user_id": "some id",
+                    "user_name": "admin",
+                    "password": "789cf532419e99b67093f10b9059465900d073c466c25efd00771189d38f7e66",  # "debug"
+                    "is_admin": "True"
+                })
 
     questionary.print("Hello there and welcome to the Habit Tracker! 🤖", style=feedback_style)
     global stop
@@ -44,15 +58,15 @@ def cli():
             pass
         global enter
         while enter:
-            choice = __show_home_screen(db, active_user)
+            choice = __show_home_screen(db, logged_in_as)
             if choice == "Add a new habit":
-                __add_a_new_habit(db, active_user)
+                __add_a_new_habit(db, logged_in_as)
             elif choice == "Complete a task":
-                __complete_a_task(db, active_user)
+                __complete_a_task(db, logged_in_as)
             elif choice == "Remove a habit":
-                __remove_habit(db, active_user)
+                __remove_habit(db, logged_in_as)
             elif choice == "Analyse my habits":
-                __analyse_all_my_habits(db, active_user)
+                __analyse_all_my_habits(db, logged_in_as)
             elif choice == "Exit program":
                 __exit_program()
         else:
@@ -80,8 +94,8 @@ def __login(db):
         if validate_password(db, answers.get("user_name"),
                              hashlib.sha3_256(answers.get("password").encode()).hexdigest()
                              ):
-            global active_user
-            active_user = answers.get("user_name")
+            global logged_in_as
+            logged_in_as = answers.get("user_name")
             global enter
             enter = True
             valid = True
@@ -121,7 +135,9 @@ def __sign_up(db):
 
 def __show_home_screen(db, user_name):
     """Function that shows all stored habits and possible actions to user. It returns user's choice as :var choice"""
-    if __create_list_of_habits_properties(db, user_name):
+    if get_user_by_name(db, user_name).is_admin == "True":
+        __admin_tasks(db, active_user=user_name)
+    elif __create_list_of_habits_properties(db, user_name):
         questionary.print(
             f"Alright {user_name}, let's go..! 🦾\nThese are your currently tracked habits:", style=feedback_style
         )
@@ -242,6 +258,24 @@ def __exit_program():
         questionary.print("Bye Bye! 🦄", style=feedback_style)
         global enter
         enter = False
+
+
+def __admin_tasks(db, active_user):
+    in_admin_tasks = True
+    while in_admin_tasks:
+        all_users = get_all_users(db)
+        for user in all_users:
+            questionary.print(f"{user.user_name}. Is admin: {user.is_admin}", style=feedback_style)
+        task = questionary.select("What do you want to do?", choices=["Delete user", "Exit"], style=custom_style).ask()
+        if task == "Delete user":
+            user_name = questionary.select("Select user you want to delete:",
+                                           choices=[user.user_name for user in all_users]
+                                           ).ask()
+            if questionary.confirm(f"Are you sure you want to delete {user_name}?", auto_enter=False).ask():
+                remove_user(db, active_user, user_name)
+        else:
+            in_admin_tasks = False
+            __exit_program()
 
 
 def __create_list_of_habits_properties(db, user_name: str):
