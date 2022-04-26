@@ -1,17 +1,14 @@
 from db import store_user_item, get_user_item_by_name, delete_user_item, get_all_user_items
-from custom_exceptions import MissingAuthorizationError, UserNameIsUnknownError
+from custom_exceptions import MissingAuthorizationError
 from user import User
 
 
 def validate_password(db, user_name: str, password: str):
     user_item = get_user_item_by_name(db, user_name)
     if user_item:
-        if user_item[0][2] == password:
-            return True
-        else:
-            return False
+        return user_item[0][2] == password
     else:
-        raise UserNameIsUnknownError
+        return False
 
 def get_user_by_name(db, user_name: str):
     user_item = get_user_item_by_name(db, user_name)

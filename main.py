@@ -104,13 +104,20 @@ def __login(db):
 
 
 def __sign_up(db):
-    user_name = questionary.text(
-        "Please enter your name:",
-        validate=lambda name: True if len(name) > 0 else "Enter a name!"
-    ).ask()
-    valid = False
+    user_name = ""
     password = ""
-    while not valid:
+    valid_user_name = False
+    valid_password = False
+    while not valid_user_name:
+        user_name = questionary.text(
+            "Please enter your name:",
+            validate=lambda name: True if len(name) > 0 else "Enter a name!"
+        ).ask()
+        if get_user_by_name(db, user_name) is None:
+            valid_user_name = True
+        else:
+            questionary.print(f"Sorry, the name {user_name} already exists.", style=feedback_style)
+    while not valid_password:
         first_entry = questionary.password(
             "Please enter a password:",
             validate=lambda phrase: True if len(phrase) > 0 else "Enter a password!"
@@ -121,7 +128,7 @@ def __sign_up(db):
         ).ask()
         if first_entry == second_entry:
             password = hashlib.sha3_256(second_entry.encode()).hexdigest()
-            valid = True
+            valid_password = True
         else:
             questionary.print("Your passwords did not match.", style=feedback_style)
     new_user = User(user_name, password)
