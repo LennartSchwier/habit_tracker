@@ -14,30 +14,33 @@ class TestHabits:
         self.db = connect_to_db("test.db")
         cur = self.db.cursor()
         cur.execute("""INSERT INTO habits VALUES (
-            :habit_id, :name, :period, :deadline, :current, :longest)""",
+            :habit_id, :name, :user_name, :period, :deadline, :current, :longest)""",
                     {
                         "habit_id": "some id",
                         "name": "first habit",
+                        "user_name": "test_user",
                         "period": 2,
                         "deadline": self.deadline,
                         "current": 4,
                         "longest": 7
                     })
         cur.execute("""INSERT INTO habits VALUES (
-                    :habit_id, :name, :period, :deadline, :current, :longest)""",
+                    :habit_id, :name, :user_name, :period, :deadline, :current, :longest)""",
                     {
                         "habit_id": "some other id",
                         "name": "second habit",
+                        "user_name": "test_user",
                         "period": 5,
                         "deadline": self.deadline,
                         "current": 2,
                         "longest": 9
                     })
         cur.execute("""INSERT INTO habits VALUES (
-                            :habit_id, :name, :period, :deadline, :current, :longest)""",
+                            :habit_id, :name, :user_name, :period, :deadline, :current, :longest)""",
                     {
                         "habit_id": "another id",
                         "name": "third habit",
+                        "user_name": "test_user",
                         "period": 2,
                         "deadline": self.deadline,
                         "current": 0,
