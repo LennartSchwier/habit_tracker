@@ -46,6 +46,17 @@ class TestHabits:
                         "current": 0,
                         "longest": 0
                     })
+        cur.execute("""INSERT INTO habits VALUES (
+                            :habit_id, :name, :user_name, :period, :deadline, :current, :longest)""",
+                    {
+                        "habit_id": "different user id",
+                        "name": "different user habit",
+                        "user_name": "different_user",
+                        "period": 1,
+                        "deadline": self.deadline,
+                        "current": 0,
+                        "longest": 0
+                    })
         self.db.commit()
 
     def test_habit_class(self):
