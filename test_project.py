@@ -5,7 +5,7 @@ import pytest
 
 from habit import Habit
 from user import User
-from user_logic import get_user_by_name, add_user, remove_user, get_all_users
+from user_logic import get_user_by_name, add_user, remove_user, get_all_users, validate_password
 from db_logic import connect_to_db, add_habit, remove_habit, update_habit_streaks, get_habit_by_name, get_all_habits
 from analysis import analyse_habits
 from custom_exceptions import HabitNameAlreadyExistsError, MissingAuthorizationError
@@ -127,6 +127,10 @@ class TestHabits:
         # Test that the user is removed from database
         remove_user(self.db, "test admin", "some other user")
         assert len(get_all_users(self.db)) is 2
+
+        # Test that correct boolean is returned
+        assert validate_password(self.db, "test user", "some password") is True
+        assert validate_password(self.db, "test user", "incorrect password") is False
 
     def test_db_logic(self):
 
