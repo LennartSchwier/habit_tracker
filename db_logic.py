@@ -29,10 +29,10 @@ def get_habit_by_name(db, name: str, user_name: str):
     if habit_item is not None:
         return Habit(
             name=habit_item[0][1],
-            period=habit_item[0][2],
-            deadline=datetime.strptime(habit_item[0][3], "%Y-%m-%d %H:%M:%S"),
-            current_streak=habit_item[0][4],
-            longest_streak=habit_item[0][5]
+            period=habit_item[0][3],
+            deadline=datetime.strptime(habit_item[0][4], "%Y-%m-%d %H:%M:%S"),
+            current_streak=habit_item[0][5],
+            longest_streak=habit_item[0][6]
         )
     else:
         return None
@@ -41,6 +41,6 @@ def get_habit_by_name(db, name: str, user_name: str):
 def get_all_habits(db, user_name: str):
     all_habits = []
     for item in get_all_habit_items(db, user_name):
-        habit = Habit(item[1], item[2], item[3], item[4], item[5])
+        habit = Habit(item[1], item[3], item[4], item[5], item[6])
         all_habits.append(habit)
     return all_habits

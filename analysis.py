@@ -1,9 +1,9 @@
 from db_logic import get_all_habits
 
 
-def analyse_habits(db, task: str, **kwargs):
+def analyse_habits(db, task: str, user_name: str, **kwargs):
     period = kwargs.get("period", int)
-    all_habits = get_all_habits(db)
+    all_habits = get_all_habits(db, user_name)
     if all_habits:
         if task == "Show currently tracked habits.":
             return [
