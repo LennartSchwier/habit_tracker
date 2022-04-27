@@ -26,7 +26,7 @@ def get_habit_by_name(db, name: str, user_name: str):
 def get_all_habits(db, user_name: str, is_active: bool):
     all_habits = []
     for item in get_all_habit_items(db, user_name, is_active):
-        habit = Habit(item[1], item[3], item[4], item[5], item[6], item[7])
+        habit = Habit(item[1], item[3], datetime.strptime(item[4], "%Y-%m-%d %H:%M:%S"), item[5], item[6], item[7])
         all_habits.append(habit)
     return all_habits
 

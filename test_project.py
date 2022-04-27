@@ -6,7 +6,7 @@ import pytest
 from habit import Habit
 from user import User
 from user_logic import get_user_by_name, add_user, remove_user, get_all_users, validate_password
-from db_logic import connect_to_db, add_habit, remove_habit, update_habit_streaks, get_habit_by_name, get_all_habits,\
+from db_logic import connect_to_db, add_habit, remove_habit, update_habit_streaks, get_habit_by_name, get_all_habits, \
     update_active_status
 from analysis import analyse_habits
 from custom_exceptions import HabitNameAlreadyExistsError, MissingAuthorizationError
@@ -208,7 +208,6 @@ class TestHabits:
         # update_active_status(self.db, received_object.name, "test_user", True)
         # received_object = get_habit_by_name(self.db, received_object.name, "test user")
         # assert received_object.is_active is False
-
 
         # Test that habit is removed from database
         remove_habit(self.db, test_habit.name, "test user")
