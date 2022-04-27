@@ -6,7 +6,8 @@ import pytest
 from habit import Habit
 from user import User
 from user_logic import get_user_by_name, add_user, remove_user, get_all_users, validate_password
-from db_logic import connect_to_db, add_habit, remove_habit, update_habit_streaks, get_habit_by_name, get_all_habits
+from db_logic import connect_to_db, add_habit, remove_habit, update_habit_streaks, get_habit_by_name, get_all_habits,\
+    update_active_status
 from analysis import analyse_habits
 from custom_exceptions import HabitNameAlreadyExistsError, MissingAuthorizationError
 from datetime import datetime, timedelta
@@ -18,6 +19,8 @@ class TestHabits:
     def setup_method(self):
         self.db = connect_to_db("test.db")
         cur = self.db.cursor()
+
+        # Inserting a test user and a test admin into the database users table
         cur.execute("""INSERT INTO users VALUES (
                     :user_id, :user_name, :password, :is_admin)""",
                     {
@@ -34,67 +37,92 @@ class TestHabits:
                         "password": "some password",
                         "is_admin": "True"
                     })
+
+        # Inserting five different habits into the database habits table
         cur.execute("""INSERT INTO habits VALUES (
-                    :habit_id, :name, :user_name, :period, :deadline, :current, :longest)""",
+                    :habit_id, :name, :user_name, :period, :deadline, :is_active, :current, :longest)""",
                     {
                         "habit_id": "some id",
                         "name": "first habit",
                         "user_name": "test user",
                         "period": 2,
                         "deadline": self.deadline,
+                        "is_active": True,
                         "current": 4,
                         "longest": 7
                     })
         cur.execute("""INSERT INTO habits VALUES (
-                    :habit_id, :name, :user_name, :period, :deadline, :current, :longest)""",
+                    :habit_id, :name, :user_name, :period, :deadline, :is_active, :current, :longest)""",
                     {
                         "habit_id": "some other id",
                         "name": "second habit",
                         "user_name": "test user",
                         "period": 5,
                         "deadline": self.deadline,
+                        "is_active": True,
                         "current": 2,
                         "longest": 9
                     })
         cur.execute("""INSERT INTO habits VALUES (
-                    :habit_id, :name, :user_name, :period, :deadline, :current, :longest)""",
+                    :habit_id, :name, :user_name, :period, :deadline, :is_active, :current, :longest)""",
                     {
                         "habit_id": "another id",
                         "name": "third habit",
                         "user_name": "test user",
                         "period": 2,
                         "deadline": self.deadline,
+                        "is_active": True,
                         "current": 0,
                         "longest": 0
                     })
         cur.execute("""INSERT INTO habits VALUES (
-                            :habit_id, :name, :user_name, :period, :deadline, :current, :longest)""",
+                    :habit_id, :name, :user_name, :period, :deadline, :is_active, :current, :longest)""",
                     {
                         "habit_id": "different user id",
                         "name": "different user habit",
                         "user_name": "different user",
                         "period": 1,
                         "deadline": self.deadline,
+                        "is_active": True,
                         "current": 0,
                         "longest": 0
+                    })
+        cur.execute("""INSERT INTO habits VALUES (
+                    :habit_id, :name, :user_name, :period, :deadline, :is_active, :current, :longest)""",
+                    {
+                        "habit_id": "inactive id",
+                        "name": "inactive habit",
+                        "user_name": "test user",
+                        "period": 2,
+                        "deadline": self.deadline,
+                        "is_active": False,
+                        "current": 5,
+                        "longest": 83
                     })
         self.db.commit()
 
     def test_habit_class(self):
 
-        test_habit = Habit("habit class test", 1, self.deadline)
+        test_habit = Habit("habit class test", 4, self.deadline, True)
         # Test Habit class constructor
         assert type(test_habit) is Habit
         assert test_habit.current_streak is 0 and test_habit.longest_streak is 0
         assert type(test_habit.deadline) is datetime
 
-        # Test that length_of_streak param is updated
+        # Test that length_of_streak param is updated correctly
         test_habit.complete_task()
         assert test_habit.current_streak is 1 and test_habit.longest_streak is 1
 
+        # Test that is_active status and deadline is updated correctly
+        test_habit.set_active_status(False)
+        assert test_habit.is_active is False
+        assert test_habit.deadline == datetime.max - timedelta(microseconds=999999)
+        test_habit.set_active_status(True)
+        assert test_habit.deadline is not datetime.max
+
         # Test that a period less than one raises an AssertionError
         try:
-            Habit("invalid period habit", 0, self.deadline)
+            Habit("invalid period habit", 0, self.deadline, True)
         except AssertionError:
             pass
         else:
@@ -141,38 +169,53 @@ class TestHabits:
         assert type(received_object) is Habit and received_object.name == "first habit"
         assert received_object.current_streak is 4 and received_object.longest_streak is 7
 
+        # Test that the correct list with all stored habits is received from database
+        all_active_habits = get_all_habits(self.db, "test user", True)
+        assert type(all_active_habits) is list and len(all_active_habits) is 3
+        all_inactive_habits = get_all_habits(self.db, "test user", False)
+        assert type(all_inactive_habits) is list and len(all_inactive_habits) is 1
+
         # Test that the habit is added to the database
-        another_test_habit = Habit("another test habit", 4, self.deadline)
-        add_habit(self.db, another_test_habit, "test user")
-        received_object = get_habit_by_name(self.db, another_test_habit.name, "test user")
-        assert type(received_object) is Habit and received_object.name == "another test habit"
+        test_habit = Habit("test habit", 4, self.deadline, True)
+        add_habit(self.db, test_habit, "test user")
+        received_object = get_habit_by_name(self.db, test_habit.name, "test user")
+        assert type(received_object) is Habit and received_object.name == "test habit"
+        assert len(get_all_habits(self.db, "test user", True)) is 4
 
         # Test that adding a habit with the same name raises a HabitNameAlreadyExistsError
         try:
-            add_habit(self.db, another_test_habit, "test user")
+            add_habit(self.db, test_habit, "test user")
         except HabitNameAlreadyExistsError:
             pass
         else:
             pytest.fail()
 
-        # Test that a list with all stored habits is received from database
-        all_habits = get_all_habits(self.db, "test user")
-        assert type(all_habits) is list and len(all_habits) is 4
-
         # Test that the habit is updated correctly (deadline, current_streak and longest_streak)
-        assert another_test_habit.deadline is self.deadline
-        assert another_test_habit.current_streak is 0 and another_test_habit.longest_streak is 0
-        update_habit_streaks(self.db, another_test_habit.name, "test user")
-        another_test_habit = get_habit_by_name(self.db, another_test_habit.name, "test user")
-        assert another_test_habit.deadline == self.deadline + timedelta(days=another_test_habit.period)
-        assert another_test_habit.current_streak is 1 and another_test_habit.longest_streak is 1
+        assert test_habit.deadline is self.deadline
+        assert test_habit.current_streak is 0 and test_habit.longest_streak is 0
+        update_habit_streaks(self.db, test_habit.name, "test user")
+        received_object = get_habit_by_name(self.db, test_habit.name, "test user")
+        assert received_object.deadline == self.deadline + timedelta(days=test_habit.period)
+        assert received_object.current_streak is 1 and received_object.longest_streak is 1
+
+        # Test that a paused habit is set inactive in the database
+        update_active_status(self.db, test_habit.name, "test user", False)
+        received_object = get_habit_by_name(self.db, test_habit.name, "test user")
+        assert received_object.is_active is False
+        assert received_object.deadline == datetime.max - timedelta(microseconds=999999)
+        assert len(get_all_habits(self.db, "test user", False)) is 2
+        assert len(get_all_habits(self.db, "test user", True)) is 3
+        # update_active_status(self.db, received_object.name, "test_user", True)
+        # received_object = get_habit_by_name(self.db, received_object.name, "test user")
+        # assert received_object.is_active is False
+
 
         # Test that habit is removed from database
-        remove_habit(self.db, another_test_habit.name, "test user")
-        removed_habit = get_habit_by_name(self.db, another_test_habit.name, "test user")
+        remove_habit(self.db, test_habit.name, "test user")
+        removed_habit = get_habit_by_name(self.db, test_habit.name, "test user")
         assert removed_habit is None
-        all_habits = get_all_habits(self.db, "test user")
-        assert len(all_habits) is 3
+        all_active_habits = get_all_habits(self.db, "test user", True)
+        assert len(all_active_habits) is 3
 
         # TODO Test that removing a non-existent habit raises a HabitIsUnknownError
 

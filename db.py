@@ -84,7 +84,7 @@ def delete_habit_item(db, name, user_name):
 
 def update_habit_item(db, name, user_name, deadline, is_active, current, longest):
     cur = db.cursor()
-    cur.execute("""UPDATE habits SET deadline=:deadline, is_active=:is_active current=:current, longest=:longest 
+    cur.execute("""UPDATE habits SET deadline=:deadline, is_active=:is_active, current=:current, longest=:longest 
                    WHERE name=:name AND user_name=:user_name""",
                 {
                     "name": name,

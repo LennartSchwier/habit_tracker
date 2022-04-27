@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from custom_exceptions import UpdateActiveStatusError
 
 
 class Habit:
@@ -25,7 +26,15 @@ class Habit:
             self.__reset_streak()
 
     def set_active_status(self, is_active: bool):
+        previous_status = self.is_active
         self.is_active = is_active
+        new_status = self.is_active
+        if previous_status is True and new_status is False:
+            self.deadline = datetime.max - timedelta(microseconds=999999)
+        elif previous_status is False and new_status is True:
+            self.deadline = datetime.now() + timedelta(days=self.period)
+        else:
+            raise UpdateActiveStatusError
 
     def __is_within_deadline(self):
         """Private method that returns 'True' if deadline has not passed already"""
@@ -37,4 +46,4 @@ class Habit:
 
     def __repr__(self):
         return f"{self.__class__.__name__}" \
-               f"('{self.name}, {self.period}, {self.current_streak}, {self.longest_streak}')"
+               f"('{self.name}, {self.period}, {self.is_active}, {self.current_streak}, {self.longest_streak}')"
