@@ -48,7 +48,6 @@ def get_all_user_items(db):
     return cur.fetchall()
 
 
-
 def store_habit_item(db, name, user_name, period, deadline, current=0, longest=0):
     if not __is_habit_item_stored(db, name, user_name):
         cur = db.cursor()

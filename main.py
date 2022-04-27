@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 feedback_style = "bold fg:cyan"
 custom_style = questionary.Style([
     ("qmark", "red bold"),
-    ("question", "white bold"),
+    ("question", "bold"),
     ("pointer", "red bold")])
 
 stop = False
@@ -116,7 +116,7 @@ def __sign_up(db):
         if get_user_by_name(db, user_name) is None:
             valid_user_name = True
         else:
-            questionary.print(f"Sorry, the name {user_name} already exists.", style=feedback_style)
+            questionary.print(f"Sorry, the name '{user_name}' already exists.", style=feedback_style)
     while not valid_password:
         first_entry = questionary.password(
             "Please enter a password:",
@@ -160,7 +160,7 @@ def __show_home_screen(db, user_name):
         ]).ask()
         return answer
     else:
-        questionary.print("Alright, let's go..! 🦾\nCurrently you are not tracking any habits.",
+        questionary.print(f"Alright {user_name}, let's go..! 🦾\nCurrently you are not tracking any habits.",
                           style=feedback_style)
         answer = questionary.select("What do you want to do?", style=custom_style, choices=[
             "Add a new habit",
