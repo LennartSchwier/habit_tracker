@@ -3,13 +3,14 @@ from datetime import datetime, timedelta
 
 class Habit:
 
-    def __init__(self, name: str, period: int, deadline: datetime, current_streak=0, longest_streak=0):
+    def __init__(self, name: str, period: int, deadline: datetime, is_active: bool, current_streak=0, longest_streak=0):
         assert period >= 1, f"Period {period} has to be greater or equal than one"
 
         # TODO private parameters, timezone
         self.name = name
         self.period = period
         self.deadline = deadline
+        self.is_active = is_active
         self.current_streak = current_streak
         self.longest_streak = longest_streak
 
