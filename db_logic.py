@@ -15,8 +15,9 @@ def get_habit_by_name(db, name: str, user_name: str):
             name=habit_item[0][1],
             period=habit_item[0][3],
             deadline=datetime.strptime(habit_item[0][4], "%Y-%m-%d %H:%M:%S"),
-            current_streak=habit_item[0][5],
-            longest_streak=habit_item[0][6]
+            is_active=habit_item[0][5],
+            current_streak=habit_item[0][6],
+            longest_streak=habit_item[0][7]
         )
     else:
         return None
@@ -34,13 +35,21 @@ def update_habit_streaks(db, name: str, user_name: str):
     habit_entity = get_habit_by_name(db, name, user_name)
     habit_entity.complete_task()
     update_habit_item(
-        db, habit_entity.name, user_name, habit_entity.deadline, habit_entity.current_streak, habit_entity.longest_streak
+        db, habit_entity.name, user_name, habit_entity.deadline, habit_entity.is_active,
+        habit_entity.current_streak, habit_entity.longest_streak
     )
 
 
-def get_all_habits(db, user_name: str):
+def update_active_status(db, name: str, user_name: str, is_active: bool):
+    habit_entity = get_habit_by_name(db, name, user_name)
+    habit_entity.set_active_status(is_active)
+    update_habit_item(db, habit_entity.name, user_name, habit_entity.deadline, habit_entity.is_active,
+                      habit_entity.current_streak, habit_entity.longest_streak)
+
+
+def get_all_habits(db, user_name: str, is_active: bool):
     all_habits = []
-    for item in get_all_habit_items(db, user_name):
+    for item in get_all_habit_items(db, user_name, is_active):
         habit = Habit(item[1], item[3], item[4], item[5], item[6])
         all_habits.append(habit)
     return all_habits

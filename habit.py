@@ -24,6 +24,9 @@ class Habit:
         else:
             self.__reset_streak()
 
+    def set_active_status(self, is_active: bool):
+        self.is_active = is_active
+
     def __is_within_deadline(self):
         """Private method that returns 'True' if deadline has not passed already"""
         return datetime.now() <= self.deadline
