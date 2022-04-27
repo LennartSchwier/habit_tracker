@@ -49,17 +49,18 @@ def get_all_user_items(db):
     return cur.fetchall()
 
 
-def store_habit_item(db, name, user_name, period, deadline, current=0, longest=0):
+def store_habit_item(db, name, user_name, period, deadline, is_active=True, current=0, longest=0):
     if not __is_habit_item_stored(db, name, user_name):
         cur = db.cursor()
         cur.execute("""INSERT INTO habits VALUES (
-            :habit_id, :name, :user_name, :period, :deadline, :current, :longest)""",
+            :habit_id, :name, :user_name, :period, :deadline, :is_active, :current, :longest)""",
                     {
                         "habit_id": str(uuid.uuid4()),
                         "name": name,
                         "user_name": user_name,
                         "period": period,
                         "deadline": deadline,
+                        "is_active": is_active,
                         "current": current,
                         "longest": longest
                     })
@@ -81,23 +82,28 @@ def delete_habit_item(db, name, user_name):
         raise HabitNameIsUnknownError
 
 
-def update_habit_item(db, name, user_name, deadline, current, longest):
+def update_habit_item(db, name, user_name, deadline, is_active, current, longest):
     cur = db.cursor()
-    cur.execute("""UPDATE habits SET deadline=:deadline, current=:current, longest=:longest 
+    cur.execute("""UPDATE habits SET deadline=:deadline, is_active=:is_active current=:current, longest=:longest 
                    WHERE name=:name AND user_name=:user_name""",
                 {
                     "name": name,
                     "user_name": user_name,
                     "deadline": deadline,
+                    "is_active": is_active,
                     "current": current,
                     "longest": longest
                 })
     db.commit()
 
 
-def get_all_habit_items(db, user_name):
+def get_all_habit_items(db, user_name, is_active):
     cur = db.cursor()
-    cur.execute("SELECT * FROM habits WHERE user_name=:user_name", {"user_name": user_name})
+    cur.execute("SELECT * FROM habits WHERE user_name=:user_name AND is_active=:is_active",
+                {
+                    "user_name": user_name,
+                    "is_active": is_active
+                })
     return cur.fetchall()
 
 
@@ -122,6 +128,7 @@ def __create_tables(db):
         user_name TEXT,
         period INT,
         deadline DATETIME,
+        is_active "BOOL",
         current INT,
         longest INT
         )""")
@@ -154,11 +161,8 @@ def __is_habit_item_stored(db, name, user_name):
 
 
 # debug_db = get_db(":memory:n")
-
 # store_habit_item(debug_db, "debug 1", "user1", 4, "tomorrow")
 # store_habit_item(debug_db, "debug 2", "user1", 6, "today")
-# print(get_all_habit_items(debug_db, "user1"))
-
-# store_user_item(debug_db, "debug user", "some password", "False")
-# store_user_item(debug_db, "debug admin", "some password", "True")
-# print(get_all_user_items(debug_db))
+# store_habit_item(debug_db, "debug 3", "user1", 1, "yesterday", False)
+# print(get_all_habit_items(debug_db, "user1", True))
+# print(get_all_habit_items(debug_db, "user1", False))
