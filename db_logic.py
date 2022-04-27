@@ -48,8 +48,8 @@ def update_habit_streaks(db, name: str, user_name: str):
     )
 
 
-def update_active_status(db, name: str, user_name: str, is_active: bool):
+def update_active_status(db, name: str, user_name: str, new_active_status: bool):
     habit_entity = get_habit_by_name(db, name, user_name)
-    habit_entity.set_active_status(is_active)
+    habit_entity.set_active_status(new_active_status)
     update_habit_item(db, habit_entity.name, user_name, habit_entity.deadline, habit_entity.is_active,
                       habit_entity.current_streak, habit_entity.longest_streak)

@@ -32,7 +32,7 @@ class Habit:
         if previous_status is True and new_status is False:
             self.deadline = datetime.max - timedelta(microseconds=999999)
         elif previous_status is False and new_status is True:
-            self.deadline = datetime.now() + timedelta(days=self.period)
+            self.deadline = datetime.now().replace(microsecond=0) + timedelta(days=self.period)
         else:
             raise UpdateActiveStatusError
 
