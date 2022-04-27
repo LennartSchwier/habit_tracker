@@ -20,6 +20,7 @@ def store_user_item(db, user_name, password, is_admin):
                         "password": password,
                         "is_admin": is_admin
                     })
+        db.commit()
     else:
         raise UserNameAlreadyExistsError
 
