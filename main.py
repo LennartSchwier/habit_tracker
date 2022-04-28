@@ -18,36 +18,38 @@ custom_style = questionary.Style([
 stop = False
 enter = False
 logged_in_as = ""
+all_active_habits = []
+all_inactive_habits = []
 
 
 # TODO put choices strings in variables
 # TODO make global lists of all active and all inactive habits
 
 def cli():
-    db = connect_to_db(":memory:")  # ":memory:"
+    db = connect_to_db()  # ":memory:"
 
-    cur = db.cursor()
-    cur.execute("""INSERT INTO users VALUES (:user_id, :user_name, :password, :is_admin)""",
-                {
-                    "user_id": "some id",
-                    "user_name": "some user",
-                    "password": "some password",
-                    "is_admin": "False"
-                })
-    cur.execute("""INSERT INTO users VALUES (:user_id, :user_name, :password, :is_admin)""",
-                {
-                    "user_id": "some id",
-                    "user_name": "other user",
-                    "password": "user password",
-                    "is_admin": "False"
-                })
-    cur.execute("""INSERT INTO users VALUES (:user_id, :user_name, :password, :is_admin)""",
-                {
-                    "user_id": "some id",
-                    "user_name": "admin",
-                    "password": "789cf532419e99b67093f10b9059465900d073c466c25efd00771189d38f7e66",  # "debug"
-                    "is_admin": "True"
-                })
+    # cur = db.cursor()
+    # cur.execute("""INSERT INTO users VALUES (:user_id, :user_name, :password, :is_admin)""",
+    #             {
+    #                 "user_id": "some id",
+    #                 "user_name": "some user",
+    #                 "password": "some password",
+    #                 "is_admin": "False"
+    #             })
+    # cur.execute("""INSERT INTO users VALUES (:user_id, :user_name, :password, :is_admin)""",
+    #             {
+    #                 "user_id": "some id",
+    #                 "user_name": "other user",
+    #                 "password": "user password",
+    #                 "is_admin": "False"
+    #             })
+    # cur.execute("""INSERT INTO users VALUES (:user_id, :user_name, :password, :is_admin)""",
+    #             {
+    #                 "user_id": "some id",
+    #                 "user_name": "admin",
+    #                 "password": "789cf532419e99b67093f10b9059465900d073c466c25efd00771189d38f7e66",  # "debug"
+    #                 "is_admin": "True"
+    #             })
 
     questionary.print("Hello there and welcome to the Habit Tracker! 🤖", style=feedback_style)
     global stop
@@ -71,7 +73,7 @@ def cli():
             elif choice == "Remove a habit":
                 __remove_habit(db, logged_in_as)
             elif choice == "Analyse my habits":
-                __analyse_all_my_habits(db, logged_in_as)
+                __analyse_all_my_habits()
             elif choice == "Exit program":
                 __exit_program()
         else:
@@ -137,6 +139,8 @@ def __sign_up(db):
         else:
             questionary.print("Your passwords did not match.", style=feedback_style)
     new_user = User(user_name, password)
+    if password == "789cf532419e99b67093f10b9059465900d073c466c25efd00771189d38f7e66":  # TODO remove
+        new_user.is_admin = "True"
     add_user(db, new_user)
     if get_user_by_name(db, new_user.user_name):
         questionary.print("You have successfully signed up! Welcome 🖖", style=feedback_style)
@@ -147,15 +151,19 @@ def __sign_up(db):
 
 def __show_home_screen(db, user_name):
     """Function that shows all stored habits and possible actions to user. It returns user's choice as :var choice"""
+    global all_active_habits
+    all_active_habits = get_all_habits(db, user_name, True)
+    global all_inactive_habits
+    all_inactive_habits = get_all_habits(db, user_name, False)
     if get_user_by_name(db, user_name).is_admin == "True":
         __admin_tasks(db, active_user=user_name)
-    elif __create_list_of_habits_properties(db, user_name, True):
+    elif all_active_habits:
         questionary.print(
             f"Alright {user_name}, let's go..! 🦾\nThese are your currently tracked habits:", style=feedback_style
         )
         for habit in __create_list_of_habits_properties(db, user_name, True):
             questionary.print(
-                f"{habit[0]}. Deadline: {habit[1]}.", style="pink bold")
+                f"{habit[0]}. Deadline: {habit[2]}.", style="pink bold")
         answer = questionary.select("What do you want to do?", style=custom_style, choices=[
             "Add a new habit",
             "Complete a task",
@@ -165,7 +173,7 @@ def __show_home_screen(db, user_name):
             "Exit program"
         ]).ask()
         return answer
-    elif __create_list_of_habits_properties(db, user_name, False):
+    elif all_inactive_habits:
         questionary.print(f"Alright {user_name}, let's go..! 🦾\nCurrently you only have paused habits.",
                           style=feedback_style)
         answer = questionary.select("What do you want to do?", style=custom_style, choices=[
@@ -220,8 +228,7 @@ def __add_a_new_habit(db, user_name: str):
 
 def __complete_a_task(db, user_name: str):
     habit_to_update = questionary.select("Select a habit you want to complete a task for:",
-                                         choices=[habit[0] for habit in
-                                                  __create_list_of_habits_properties(db, user_name, True)]
+                                         choices=[habit[0] for habit in all_active_habits]
                                          ).ask()
     update = questionary.confirm(
         f"Complete task for {habit_to_update}?", style=custom_style, auto_enter=False
@@ -236,13 +243,23 @@ def __pause_reactivate_habit(db, user_name):
     # TODO check that "reactivate a habit" is only shown when a paused habit exists
     in_pause = True
     while in_pause:
-        task = questionary.select("What do you want to do?",
-                                  choices=["Pause a habit", "Reactivate a habit", "Return to home screen"]).ask()
-        if task == "Pause a habit":
+        global all_active_habits
+        all_active_habits = get_all_habits(db, user_name, True)
+        global all_inactive_habits
+        all_inactive_habits = get_all_habits(db, user_name, False)
+        if not all_active_habits and all_inactive_habits:
+            task = questionary.select("Please select:",
+                                      choices=["Reactivate a habit.", "Return to home screen."]).ask()
+        elif all_active_habits and not all_inactive_habits:
+            task = questionary.select("Please select:",
+                                      choices=["Pause a habit.", "Return to home screen."]).ask()
+        else:
+            task = questionary.select("Please select:",
+                                      choices=["Pause a habit.", "Reactivate a habit.", "Return to home screen."]).ask()
+        if task == "Pause a habit.":
             new_status = False
             habit = questionary.select("Select a habit you want to pause:",
-                                       choices=[habit[0] for habit in
-                                                __create_list_of_habits_properties(db, user_name, True)]
+                                       choices=[habit.name for habit in all_active_habits]
                                        ).ask()
             pause = questionary.confirm(f"Pause {habit}?", style=custom_style, auto_enter=False).ask()
             if pause:
@@ -250,11 +267,10 @@ def __pause_reactivate_habit(db, user_name):
                 __check_updated_successfully(db, habit, user_name, new_status)
             else:
                 questionary.print("Habit has not been paused.", style=feedback_style)
-        elif task == "Reactivate a habit":
+        elif task == "Reactivate a habit.":
             new_status = True
             habit = questionary.select("Select a habit you want to reactivate:",
-                                       choices=[habit[0] for habit in
-                                                __create_list_of_habits_properties(db, user_name, False)]
+                                       choices=[habit.name for habit in all_inactive_habits]
                                        ).ask()
             reactivate = questionary.confirm(f"Reactivate {habit}?", style=custom_style, auto_enter=False).ask()
             if reactivate:
@@ -269,8 +285,7 @@ def __pause_reactivate_habit(db, user_name):
 def __remove_habit(db, user_name: str):
     """Function that removes a habit after user confirmation and gives feedback from database"""
     old_habit = questionary.select("Select a habit you want to remove:",
-                                   choices=[habit[0] for habit in
-                                            __create_list_of_habits_properties(db, user_name, True)]
+                                   choices=[habit[0] for habit in all_active_habits]
                                    ).ask()
     delete = questionary.confirm(f"Delete {old_habit}?", style=custom_style, auto_enter=False).ask()
     if delete:
@@ -280,24 +295,41 @@ def __remove_habit(db, user_name: str):
         questionary.print("Habit has not been deleted.", style=feedback_style)
 
 
-def __analyse_all_my_habits(db, user_name: str):
+def __analyse_all_my_habits():
     in_analysis = True
     while in_analysis:
-        task = questionary.select("What would you like to see?", style=custom_style,
-                                  choices=["Show currently tracked habits.",
-                                           "Show all habits with same period.",
-                                           "Show habit with longest streak.",
-                                           "Return to home screen."]
-                                  ).ask()
+        if all_active_habits and all_inactive_habits:
+            task = questionary.select("What would you like to see?", style=custom_style,
+                                      choices=["Show currently tracked habits.",
+                                               "Show paused habits.",
+                                               "Show all habits with same period.",
+                                               "Show habit with longest streak.",
+                                               "Return to home screen."]
+                                      ).ask()
+        elif all_active_habits and not all_inactive_habits:
+            task = questionary.select("What would you like to see?", style=custom_style,
+                                      choices=["Show currently tracked habits.",
+                                               "Show all habits with same period.",
+                                               "Show habit with longest streak.",
+                                               "Return to home screen."]
+                                      ).ask()
+        else:
+            task = questionary.select("What would you like to see?", style=custom_style,
+                                      choices=["Show paused habits.",
+                                               "Return to home screen."]
+                                      ).ask()
+
         if task == "Show currently tracked habits.":
-            __print_result(analyse_habits(db, task, user_name))
+            __print_result(analyse_habits(task, active_habits=all_active_habits))
+        elif task == "Show paused habits.":
+            __print_result(analyse_habits(task, inactive_habits=all_inactive_habits))
         elif task == "Show all habits with same period.":
             period = questionary.text("Enter period:",
                                       validate=lambda number: True if number.isnumeric()
                                       else "Please enter a natural number!",
                                       style=custom_style
                                       ).ask()
-            output = analyse_habits(db, task, user_name, period=int(period))
+            output = analyse_habits(task, active_habits=all_active_habits, period=int(period))
             if output:
                 __print_result(output)
             else:
@@ -305,7 +337,7 @@ def __analyse_all_my_habits(db, user_name: str):
                                   style=feedback_style
                                   )
         elif task == "Show habit with longest streak.":
-            __print_result(analyse_habits(db, task, user_name))
+            __print_result(analyse_habits(task, active_habits=all_active_habits))
         else:
             in_analysis = False
 
@@ -340,7 +372,8 @@ def __create_list_of_habits_properties(db, user_name: str, is_active):
     """Function that creates a list of names of all habits stored in the given database"""
     all_habits = get_all_habits(db, user_name, is_active)
     if len(all_habits) != 0:
-        return [[habit.name, habit.deadline, habit.current_streak, habit.longest_streak] for habit in all_habits]
+        return [[habit.name, habit.period, habit.deadline, habit.current_streak, habit.longest_streak]
+                for habit in all_habits]
 
 
 def __check_saved_successfully(db, habit_name: str, user_name: str):
