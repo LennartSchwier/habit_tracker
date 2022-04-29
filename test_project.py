@@ -222,7 +222,7 @@ class TestHabits:
 
         # Test that a list with all active habits and its associated details is returned
         active_habits = get_all_habits(self.db, "test user", True)
-        choice = "Show currently tracked habits."
+        choice = "Currently tracked habits."
         output = analyse_habits(choice, active_habits=active_habits)
         assert output == ['first habit. Period: 2 days. Deadline: 2032-04-21 18:00:00. Current streak: '
                           '4. Longest streak: 7.',
@@ -233,17 +233,17 @@ class TestHabits:
 
         # Test that a list with all paused habits and its associated details is returned
         inactive_habits = get_all_habits(self.db, "test user", False)
-        choice = "Show paused habits."
+        choice = "Paused habits."
         output = analyse_habits(choice, inactive_habits=inactive_habits)
         assert output == ['inactive habit. Period: 2 days. Current streak: 5. Longest streak: 83.']
 
         # Test that a list with all habits with period 2 is returned
-        choice = "Show all habits with same period."
+        choice = "All habits with same period."
         output = analyse_habits(choice, active_habits=active_habits, period=2)
         assert output == ['first habit', 'third habit']
 
         # Test that the habit with the longest streak is returned
-        choice = "Show habit with longest streak."
+        choice = "Habit with longest streak."
         output = analyse_habits(choice, active_habits=active_habits)
         assert output == ["second habit with 9 times"]
 
