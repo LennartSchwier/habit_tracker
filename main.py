@@ -205,8 +205,8 @@ def __add_a_new_habit(db, user_name: str):
         {
             "type": "text",
             "name": "period",
-            "message": "Length of period in days?",
-            "validate": lambda number: True if number.isnumeric() else "Please enter natural number!"
+            "message": "Length of repetition period in days?",
+            "validate": lambda number: True if number.isnumeric() and int(number) > 0 else "Please enter a natural number!"
         }
     ]
     answers = questionary.prompt(questions)
@@ -215,7 +215,7 @@ def __add_a_new_habit(db, user_name: str):
     habit_deadline = datetime.now().replace(microsecond=0) + timedelta(days=habit_period)
     new_habit = Habit(name=habit_name, period=habit_period, deadline=habit_deadline, is_active=True)
     save = questionary.confirm(
-        f"Save {new_habit.name} with length of period {new_habit.period} days?",
+        f"Save {new_habit.name} with a repetition period of {new_habit.period} days?",
         style=custom_style,
         auto_enter=False
     ).ask()
@@ -228,15 +228,23 @@ def __add_a_new_habit(db, user_name: str):
 
 def __complete_a_task(db, user_name: str):
     habit_to_update = questionary.select("Select a habit you want to complete a task for:",
-                                         choices=[habit[0] for habit in all_active_habits]
+                                         choices=[habit.name for habit in all_active_habits]
                                          ).ask()
+    old_streak_length = get_habit_by_name(db, habit_to_update, user_name).current_streak
     update = questionary.confirm(
-        f"Complete task for {habit_to_update}?", style=custom_style, auto_enter=False
+        f"Complete task for '{habit_to_update}'?", style=custom_style, auto_enter=False
     ).ask()
     if update:
         update_habit_streaks(db, habit_to_update, user_name)
+        new_streak_length = get_habit_by_name(db, habit_to_update, user_name).current_streak
+        if old_streak_length + 1 == new_streak_length:
+            questionary.print(
+                f"'{habit_to_update}' has been updated. Your current streak length is {new_streak_length}.",
+                style=feedback_style
+            )
+
     else:
-        questionary.print("Habit has not been updated", style=feedback_style)
+        questionary.print(f"'{habit_to_update}' has not been updated", style=feedback_style)
 
 
 def __pause_reactivate_habit(db, user_name):
@@ -285,7 +293,7 @@ def __pause_reactivate_habit(db, user_name):
 def __remove_habit(db, user_name: str):
     """Function that removes a habit after user confirmation and gives feedback from database"""
     old_habit = questionary.select("Select a habit you want to remove:",
-                                   choices=[habit[0] for habit in all_active_habits]
+                                   choices=[habit.name for habit in all_active_habits]
                                    ).ask()
     delete = questionary.confirm(f"Delete {old_habit}?", style=custom_style, auto_enter=False).ask()
     if delete:
@@ -300,30 +308,30 @@ def __analyse_all_my_habits():
     while in_analysis:
         if all_active_habits and all_inactive_habits:
             task = questionary.select("What would you like to see?", style=custom_style,
-                                      choices=["Show currently tracked habits.",
-                                               "Show paused habits.",
-                                               "Show all habits with same period.",
-                                               "Show habit with longest streak.",
+                                      choices=["Currently tracked habits.",
+                                               "Paused habits.",
+                                               "All habits with same period.",
+                                               "Habit with longest streak.",
                                                "Return to home screen."]
                                       ).ask()
         elif all_active_habits and not all_inactive_habits:
             task = questionary.select("What would you like to see?", style=custom_style,
-                                      choices=["Show currently tracked habits.",
-                                               "Show all habits with same period.",
-                                               "Show habit with longest streak.",
+                                      choices=["Currently tracked habits.",
+                                               "All habits with same period.",
+                                               "Habit with longest streak.",
                                                "Return to home screen."]
                                       ).ask()
         else:
             task = questionary.select("What would you like to see?", style=custom_style,
-                                      choices=["Show paused habits.",
+                                      choices=["Paused habits.",
                                                "Return to home screen."]
                                       ).ask()
 
-        if task == "Show currently tracked habits.":
+        if task == "Currently tracked habits.":
             __print_result(analyse_habits(task, active_habits=all_active_habits))
-        elif task == "Show paused habits.":
+        elif task == "Paused habits.":
             __print_result(analyse_habits(task, inactive_habits=all_inactive_habits))
-        elif task == "Show all habits with same period.":
+        elif task == "All habits with same period.":
             period = questionary.text("Enter period:",
                                       validate=lambda number: True if number.isnumeric()
                                       else "Please enter a natural number!",
@@ -336,7 +344,7 @@ def __analyse_all_my_habits():
                 questionary.print(f"You are not tracking any habits with a period of {period} days.",
                                   style=feedback_style
                                   )
-        elif task == "Show habit with longest streak.":
+        elif task == "Habit with longest streak.":
             __print_result(analyse_habits(task, active_habits=all_active_habits))
         else:
             in_analysis = False
