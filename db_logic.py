@@ -46,7 +46,7 @@ def get_all_habits(db, user_name: str, is_active: bool):
 
 def add_habit(db, habit: Habit, user_name: str):
     created = datetime.now().replace(microsecond=0)
-    store_habit_item(db, habit.name, user_name, created, habit.period, habit.deadline)
+    store_habit_item(db, habit.habit_id, habit.name, user_name, created, habit.period, habit.deadline)
 
 
 def remove_habit(db, name: str, user_name: str):
@@ -56,7 +56,7 @@ def remove_habit(db, name: str, user_name: str):
 def update_streaks(db, name: str, user_name: str):
     habit_entity = get_habit_by_name(db, name, user_name)
     habit_entity.complete_task()
-    if habit_entity.current_streak is 0:
+    if habit_entity.current_streak == 0:
         remove_tasks_by_habit_id(db, habit_entity.habit_id)
     else:
         update_streaks_habit_item(db, habit_entity.name, user_name, habit_entity.deadline, habit_entity.longest_streak)

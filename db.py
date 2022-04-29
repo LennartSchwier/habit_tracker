@@ -49,13 +49,13 @@ def get_all_user_items(db):
     return cur.fetchall()
 
 
-def store_habit_item(db, name, user_name, created, period, deadline, is_active=True, longest=0):
+def store_habit_item(db, habit_id, name, user_name, created, period, deadline, is_active=True, longest=0):
     if not __is_habit_item_stored(db, name, user_name):
         cur = db.cursor()
         cur.execute("""INSERT INTO habits VALUES (
             :habit_id, :name, :user_name, :created, :period, :deadline, :is_active, :longest)""",
                     {
-                        "habit_id": str(uuid.uuid4()),
+                        "habit_id": habit_id,
                         "name": name,
                         "user_name": user_name,
                         "created": created,

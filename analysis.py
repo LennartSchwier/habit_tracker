@@ -1,17 +1,22 @@
-
 def analyse_habits(task: str, **kwargs):
     active_habits = kwargs.get("active_habits")
     inactive_habits = kwargs.get("inactive_habits")
     period = kwargs.get("period", int)
     if task == "Currently tracked habits.":
         return [
-            f"{habit.name}. Period: {habit.period} days. Deadline: {habit.deadline}. Current streak: {habit.current_streak}. Longest streak: {habit.longest_streak}."
+            f"""{habit.name}:
+            Created: {habit.created}. Period: {habit.period} days. Deadline: {habit.deadline}. 
+            Current streak: {habit.current_streak}. Longest streak: {habit.longest_streak}.
+            ------------------------------------------"""
             for habit in active_habits]
 
     elif task == "Paused habits.":
         print(inactive_habits)
         return [
-            f"{habit.name}. Period: {habit.period} days. Current streak: {habit.current_streak}. Longest streak: {habit.longest_streak}."
+            f"""{habit.name}: 
+            Period: {habit.period} days. 
+            Current streak: {habit.current_streak}. Longest streak: {habit.longest_streak}.
+            ------------------------------------------"""
             for habit in inactive_habits]
 
     elif task == "All habits with same period.":

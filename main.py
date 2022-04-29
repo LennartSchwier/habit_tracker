@@ -1,5 +1,6 @@
 import questionary
 import hashlib
+import uuid
 from db_logic import connect_to_db, add_habit, remove_habit, \
     update_streaks, get_habit_by_name, get_all_habits, update_active_status
 from user_logic import add_user, get_user_by_name, validate_password, get_all_users, remove_user
@@ -206,14 +207,20 @@ def __add_a_new_habit(db, user_name: str):
             "type": "text",
             "name": "period",
             "message": "Length of repetition period in days?",
-            "validate": lambda number: True if number.isnumeric() and int(number) > 0 else "Please enter a natural number!"
+            "validate": lambda num: True if num.isnumeric() and int(num) > 0 else "Please enter a natural number!"
         }
     ]
     answers = questionary.prompt(questions)
     habit_name = answers.get('name')
     habit_period = int(answers.get('period'))
     habit_deadline = datetime.now().replace(microsecond=0) + timedelta(days=habit_period)
-    new_habit = Habit(name=habit_name, period=habit_period, deadline=habit_deadline, is_active=True)
+    new_habit = Habit(
+        habit_id=str(uuid.uuid4()),
+        name=habit_name,
+        created=datetime.now().replace(microsecond=0),
+        period=habit_period,
+        deadline=habit_deadline,
+        is_active=True)
     save = questionary.confirm(
         f"Save {new_habit.name} with a repetition period of {new_habit.period} days?",
         style=custom_style,
@@ -333,7 +340,7 @@ def __analyse_all_my_habits():
             __print_result(analyse_habits(task, inactive_habits=all_inactive_habits))
         elif task == "All habits with same period.":
             period = questionary.text("Enter period:",
-                                      validate=lambda number: True if number.isnumeric()
+                                      validate=lambda num: True if num.isnumeric() and int(num) > 0
                                       else "Please enter a natural number!",
                                       style=custom_style
                                       ).ask()

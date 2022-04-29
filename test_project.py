@@ -205,7 +205,7 @@ class TestHabits:
 
         # Test that the habit is added to the database
         test_habit = Habit(
-            habit_id="some id",
+            habit_id="habit id",
             name="test habit",
             created=self.created,
             period=4,
