@@ -1,7 +1,7 @@
 import questionary
 import hashlib
 from db_logic import connect_to_db, add_habit, remove_habit, \
-    update_habit_streaks, get_habit_by_name, get_all_habits, update_active_status
+    update_streaks, get_habit_by_name, get_all_habits, update_active_status
 from user_logic import add_user, get_user_by_name, validate_password, get_all_users, remove_user
 from analysis import analyse_habits
 from custom_exceptions import HabitSaveError, HabitUpdateError, HabitDeletionError
@@ -235,7 +235,7 @@ def __complete_a_task(db, user_name: str):
         f"Complete task for '{habit_to_update}'?", style=custom_style, auto_enter=False
     ).ask()
     if update:
-        update_habit_streaks(db, habit_to_update, user_name)
+        update_streaks(db, habit_to_update, user_name)
         new_streak_length = get_habit_by_name(db, habit_to_update, user_name).current_streak
         if old_streak_length + 1 == new_streak_length:
             questionary.print(
