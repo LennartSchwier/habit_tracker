@@ -34,7 +34,19 @@ class HabitDeletionError(Exception):
         self.message = message
 
 
+class HabitUpdateError(Exception):
+
+    def __init__(self, message="Something went wrong trying to update the habit active status!"):
+        self.message = message
+
+
 class MissingAuthorizationError(Exception):
 
     def __init__(self, message="Missing authorization!"):
+        self.message = message
+
+
+class UpdateActiveStatusError(Exception):
+
+    def __init__(self, message="Something went wrong trying to update the status"):
         self.message = message

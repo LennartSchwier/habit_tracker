@@ -1,3 +1,4 @@
+import datetime
 import sqlite3
 import uuid
 from custom_exceptions import UserNameAlreadyExistsError, UserNameIsUnknownError, \
@@ -49,18 +50,19 @@ def get_all_user_items(db):
     return cur.fetchall()
 
 
-def store_habit_item(db, name, user_name, period, deadline, current=0, longest=0):
+def store_habit_item(db, habit_id, name, user_name, created, period, deadline, is_active=True, longest=0):
     if not __is_habit_item_stored(db, name, user_name):
         cur = db.cursor()
         cur.execute("""INSERT INTO habits VALUES (
-            :habit_id, :name, :user_name, :period, :deadline, :current, :longest)""",
+            :habit_id, :name, :user_name, :created, :period, :deadline, :is_active, :longest)""",
                     {
-                        "habit_id": str(uuid.uuid4()),
+                        "habit_id": habit_id,
                         "name": name,
                         "user_name": user_name,
+                        "created": created,
                         "period": period,
                         "deadline": deadline,
-                        "current": current,
+                        "is_active": is_active,
                         "longest": longest
                     })
         db.commit()
@@ -81,23 +83,37 @@ def delete_habit_item(db, name, user_name):
         raise HabitNameIsUnknownError
 
 
-def update_habit_item(db, name, user_name, deadline, current, longest):
+def update_streaks_habit_item(db, name, user_name, deadline, longest):
     cur = db.cursor()
-    cur.execute("""UPDATE habits SET deadline=:deadline, current=:current, longest=:longest 
-                   WHERE name=:name AND user_name=:user_name""",
+    cur.execute("UPDATE habits SET deadline=:deadline, longest=:longest WHERE name=:name AND user_name=:user_name",
                 {
                     "name": name,
                     "user_name": user_name,
                     "deadline": deadline,
-                    "current": current,
                     "longest": longest
                 })
     db.commit()
 
 
-def get_all_habit_items(db, user_name):
+def update_active_status_habit_item(db, name, user_name, deadline, is_active):
     cur = db.cursor()
-    cur.execute("SELECT * FROM habits WHERE user_name=:user_name", {"user_name": user_name})
+    cur.execute("UPDATE habits SET deadline=:deadline, is_active=:is_active WHERE name=:name AND user_name=:user_name",
+                {
+                    "name": name,
+                    "user_name": user_name,
+                    "deadline": deadline,
+                    "is_active": is_active
+                })
+    db.commit()
+
+
+def get_all_habit_items(db, user_name, is_active):
+    cur = db.cursor()
+    cur.execute("SELECT * FROM habits WHERE user_name=:user_name AND is_active=:is_active",
+                {
+                    "user_name": user_name,
+                    "is_active": is_active
+                })
     return cur.fetchall()
 
 
@@ -114,24 +130,54 @@ def get_habit_item_by_name(db, name, user_name):
         return None
 
 
+def store_task_item(db, created, habit_id):
+    cur = db.cursor()
+    cur.execute("INSERT INTO tasks VALUES (:task_id, :created, :habit_id)",
+                {
+                    "task_id": str(uuid.uuid4()),
+                    "created": created,
+                    "habit_id": habit_id
+                })
+    db.commit()
+
+
+def get_tasks_by_habit_id(db, habit_id):
+    cur = db.cursor()
+    cur.execute("SELECT * FROM tasks WHERE habit_id=:habit_id", {"habit_id": habit_id})
+    return cur.fetchall()
+
+
+def remove_tasks_by_habit_id(db, habit_id):
+    cur = db.cursor()
+    cur.execute("DELETE FROM tasks WHERE habit_id=:habit_id", {"habit_id": habit_id})
+    db.commit()
+
+
 def __create_tables(db):
     cur = db.cursor()
     cur.execute("""CREATE TABLE IF NOT EXISTS habits (
-        habit_id INT PRIMARY KEY,
+        habit_id TEXT PRIMARY KEY,
         name TEXT,
         user_name TEXT,
+        created DATETIME,
         period INT,
         deadline DATETIME,
-        current INT,
+        is_active BOOL,
         longest INT
-        )""")
+    )""")
     cur.execute("""CREATE TABLE IF NOT EXISTS users (
-        user_id INT,
+        user_id TEXT,
         user_name TEXT,
         password TEXT,
         is_admin BOOL,
         FOREIGN KEY (user_name) REFERENCES habits(user_name)
-        )""")
+    )""")
+    cur.execute("""CREATE TABLE IF NOT EXISTS tasks (
+        task_id TEXT,
+        created DATETIME,
+        habit_id TEXT,
+        FOREIGN KEY (habit_id) REFERENCES habits(habit_id)
+    )""")
     db.commit()
 
 
@@ -154,11 +200,13 @@ def __is_habit_item_stored(db, name, user_name):
 
 
 # debug_db = get_db(":memory:n")
-
-# store_habit_item(debug_db, "debug 1", "user1", 4, "tomorrow")
-# store_habit_item(debug_db, "debug 2", "user1", 6, "today")
-# print(get_all_habit_items(debug_db, "user1"))
-
-# store_user_item(debug_db, "debug user", "some password", "False")
-# store_user_item(debug_db, "debug admin", "some password", "True")
-# print(get_all_user_items(debug_db))
+# create = datetime.datetime.now().replace(microsecond=0)
+# store_habit_item(debug_db, "some id", "debug 1", "user1", create, 4, "tomorrow")
+# store_habit_item(debug_db, "some other id", "debug 2", "user1", create, 6, "today")
+# # store_habit_item(debug_db, "debug 3", "user1", create, 1, "yesterday", False)
+# print(get_all_habit_items(debug_db, "user1", True))
+#
+# store_task_item(debug_db, create, "some id")
+# store_task_item(debug_db, create, "some id")
+# store_task_item(debug_db, create, "some id")
+# print(get_tasks_by_habit_id(debug_db, "some id"))
