@@ -338,7 +338,6 @@ def __analyse_all_my_habits(db):
         elif task == "Completed tasks.":
             habit_name = questionary.select("Select a habit you want to see the completed tasks for:",
                                             choices=[habit.name for habit in all_active_habits]).ask()
-            questionary.print("Here should be some tasks...")
             output = analyse_habits(task, completed_tasks=get_all_tasks(db, habit_name))
             __print_result(output)
         else:

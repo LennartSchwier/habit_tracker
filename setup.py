@@ -9,19 +9,49 @@ def setup_db():
     db = get_db("test.db")
     for user in ["John", "Jane"]:
         __store_user(db, user, user)
+
+    __store_habit(
+        db=db,
+        habit_name="sleep eight hours",
+        user_name="John",
+        created=datetime.now().replace(microsecond=0) - timedelta(days=28),
+        period=1,
+        deadline=datetime.now().replace(microsecond=0) + timedelta(days=1),
+        is_active=True,
+        longest=12
+    )
+    days_since_completed = reversed(list(range(8)))
+    for value in days_since_completed:
+        __store_task(db, value, "sleep eight hours")
+
     __store_habit(
         db=db,
         habit_name="go running",
         user_name="John",
-        created=datetime.now().replace(microsecond=0) - timedelta(days=20),
+        created=datetime.now().replace(microsecond=0) - timedelta(days=17),
         period=3,
-        deadline=datetime.now().replace(microsecond=0) - timedelta(days=2),
+        deadline=datetime.now().replace(microsecond=0) + timedelta(days=2),
         is_active=True,
         longest=5
     )
     days_since_completed = [8, 7, 4, 2]
     for value in days_since_completed:
         __store_task(db, value, "go running")
+
+    __store_habit(
+        db=db,
+        habit_name="see the dentist",
+        user_name="John",
+        created=datetime.now().replace(microsecond=0) - timedelta(days=400),
+        period=180,
+        deadline=datetime.now().replace(microsecond=0) + timedelta(days=50),
+        is_active=True,
+        longest=2
+    )
+    days_since_completed = [280, 130]
+    for value in days_since_completed:
+        __store_task(db, value, "see the dentist")
+
     return db
 
 
