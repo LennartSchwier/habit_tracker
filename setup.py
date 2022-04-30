@@ -61,15 +61,15 @@ def __store_habit(db, habit_name, user_name, created, period, deadline, is_activ
     db.commit()
 
 
-def __store_task(db, days_since_completed, habit_id):
+def __store_task(db, days_since_completed, habit_name):
     created = datetime.now().replace(microsecond=0) - timedelta(days=days_since_completed)
     cur = db.cursor()
     cur.execute(
-        "INSERT INTO tasks VALUES (:task_id, :created, :habit_id)",
+        "INSERT INTO tasks VALUES (:task_id, :created, :habit_name)",
         {
             "task_id": str(uuid.uuid4()),
             "created": created,
-            "habit_id": habit_id
+            "habit_name": habit_name
         }
     )
     db.commit()
