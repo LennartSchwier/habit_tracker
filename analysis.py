@@ -1,8 +1,9 @@
-def analyse_habits(task: str, **kwargs):
+def analyse_habits(choice: str, **kwargs):
     active_habits = kwargs.get("active_habits")
     inactive_habits = kwargs.get("inactive_habits")
+    completed_tasks = kwargs.get("completed_tasks")
     period = kwargs.get("period", int)
-    if task == "Currently tracked habits.":
+    if choice == "Currently tracked habits.":
         return [
             f"""{habit.name}:
             Created: {habit.created}. Period: {habit.period} days. Deadline: {habit.deadline}. 
@@ -10,7 +11,7 @@ def analyse_habits(task: str, **kwargs):
             ------------------------------------------"""
             for habit in active_habits]
 
-    elif task == "Paused habits.":
+    elif choice == "Paused habits.":
         print(inactive_habits)
         return [
             f"""{habit.name}: 
@@ -19,10 +20,13 @@ def analyse_habits(task: str, **kwargs):
             ------------------------------------------"""
             for habit in inactive_habits]
 
-    elif task == "All habits with same period.":
+    elif choice == "All habits with same period.":
         return [f"{habit.name}" for habit in active_habits if habit.period is period]
 
-    elif task == "Habit with longest streak.":
+    elif choice == "Habit with longest streak.":
         longest_streaks = [habit.longest_streak for habit in active_habits]
         record_habits = [habit for habit in active_habits if habit.longest_streak is max(longest_streaks)]
         return [f"{habit.name} with {habit.longest_streak} times" for habit in record_habits]
+
+    elif choice == "Completed tasks.":
+        return [f"{completed_tasks.index(task) + 1}. Task. Completed on: {task.created}" for task in completed_tasks]

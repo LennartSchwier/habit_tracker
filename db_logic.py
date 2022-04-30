@@ -2,6 +2,7 @@ from db import store_habit_item, delete_habit_item, get_habit_item_by_name, \
     update_streaks_habit_item, get_db, get_all_habit_items, store_task_item, get_tasks_by_habit_id, \
     remove_tasks_by_habit_id, update_active_status_habit_item
 from habit import Habit
+from task import Task
 from datetime import datetime
 
 
@@ -51,6 +52,17 @@ def add_habit(db, habit: Habit, user_name: str):
 
 def remove_habit(db, name: str, user_name: str):
     delete_habit_item(db, name, user_name)
+
+
+def get_all_tasks(db, habit_id: str):
+    all_tasks = []
+    for task_item in get_tasks_by_habit_id(db, habit_id):
+        task = Task(
+            task_id=task_item[0],
+            created=task_item[1]
+        )
+        all_tasks.append(task)
+    return all_tasks
 
 
 def update_streaks(db, name: str, user_name: str):

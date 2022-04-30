@@ -7,7 +7,7 @@ from habit import Habit
 from user import User
 from user_logic import get_user_by_name, add_user, remove_user, get_all_users, validate_password
 from db_logic import connect_to_db, add_habit, remove_habit, update_streaks, get_habit_by_name, get_all_habits, \
-    update_active_status
+    update_active_status, get_all_tasks
 from analysis import analyse_habits
 from custom_exceptions import HabitNameAlreadyExistsError, MissingAuthorizationError
 from datetime import datetime, timedelta
@@ -252,24 +252,40 @@ class TestHabits:
 
         # TODO Test that removing a non-existent habit raises a HabitIsUnknownError
 
+        # Test that all completed tasks for a habit are received from database
+        received_tasks = get_all_tasks(self.db, "some id")
+        assert type(received_tasks) is list and len(received_tasks) is 2
+
     def test_analysis(self):
 
         # Test that a list with all active habits and its associated details is returned
         active_habits = get_all_habits(self.db, "test user", True)
         choice = "Currently tracked habits."
         output = analyse_habits(choice, active_habits=active_habits)
-        assert output == ['first habit. Period: 2 days. Deadline: 2032-04-21 18:00:00. Current streak: '
-                          '2. Longest streak: 7.',
-                          'second habit. Period: 5 days. Deadline: 2032-04-21 18:00:00. Current streak: '
-                          '1. Longest streak: 9.',
-                          'third habit. Period: 2 days. Deadline: 2032-04-21 18:00:00. Current streak: '
-                          '0. Longest streak: 0.']
+        assert output == ['first habit:\n'
+                            '            Created: 2022-04-21 18:00:00. Period: 2 days. Deadline: '
+                            '2032-04-21 18:00:00. \n'
+                            '            Current streak: 2. Longest streak: 7.\n'
+                            '            ------------------------------------------',
+                            'second habit:\n'
+                            '            Created: 2022-04-21 18:00:00. Period: 5 days. Deadline: '
+                            '2032-04-21 18:00:00. \n'
+                            '            Current streak: 1. Longest streak: 9.\n'
+                            '            ------------------------------------------',
+                            'third habit:\n'
+                            '            Created: 2022-04-21 18:00:00. Period: 2 days. Deadline: '
+                            '2032-04-21 18:00:00. \n'
+                            '            Current streak: 0. Longest streak: 0.\n'
+                            '            ------------------------------------------']
 
         # Test that a list with all paused habits and its associated details is returned
         inactive_habits = get_all_habits(self.db, "test user", False)
         choice = "Paused habits."
         output = analyse_habits(choice, inactive_habits=inactive_habits)
-        assert output == ['inactive habit. Period: 2 days. Current streak: 0. Longest streak: 83.']
+        assert output == ['inactive habit: \n'
+                            '            Period: 2 days. \n'
+                            '            Current streak: 0. Longest streak: 83.\n'
+                            '            ------------------------------------------']
 
         # Test that a list with all habits with period 2 is returned
         choice = "All habits with same period."
@@ -281,6 +297,12 @@ class TestHabits:
         output = analyse_habits(choice, active_habits=active_habits)
         assert output == ["second habit with 9 times"]
 
+        # Test that all completed tasks for a habit are returned
+        completed_tasks = get_all_tasks(self.db, "some id")
+        choice = "Completed tasks."
+        output = analyse_habits(choice, completed_tasks=completed_tasks)
+        assert output == ['1. Task. Completed on: 2022-04-21 18:00:00', '2. Task. Completed on: 2022-04-21 18:00:00']
+#
     @staticmethod
     def teardown_method():
         os.remove("test.db")

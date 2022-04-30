@@ -2,7 +2,7 @@ import questionary
 import hashlib
 import uuid
 from db_logic import connect_to_db, add_habit, remove_habit, \
-    update_streaks, get_habit_by_name, get_all_habits, update_active_status
+    update_streaks, get_habit_by_name, get_all_habits, update_active_status, get_all_tasks
 from user_logic import add_user, get_user_by_name, validate_password, get_all_users, remove_user
 from analysis import analyse_habits
 from custom_exceptions import HabitSaveError, HabitUpdateError, HabitDeletionError
@@ -74,7 +74,7 @@ def cli():
             elif choice == "Remove a habit":
                 __remove_habit(db, logged_in_as)
             elif choice == "Analyse my habits":
-                __analyse_all_my_habits()
+                __analyse_all_my_habits(db)
             elif choice == "Exit program":
                 __exit_program()
         else:
@@ -310,7 +310,7 @@ def __remove_habit(db, user_name: str):
         questionary.print("Habit has not been deleted.", style=feedback_style)
 
 
-def __analyse_all_my_habits():
+def __analyse_all_my_habits(db):
     in_analysis = True
     while in_analysis:
         if all_active_habits and all_inactive_habits:
@@ -319,6 +319,7 @@ def __analyse_all_my_habits():
                                                "Paused habits.",
                                                "All habits with same period.",
                                                "Habit with longest streak.",
+                                               "Completed tasks.",
                                                "Return to home screen."]
                                       ).ask()
         elif all_active_habits and not all_inactive_habits:
@@ -326,6 +327,7 @@ def __analyse_all_my_habits():
                                       choices=["Currently tracked habits.",
                                                "All habits with same period.",
                                                "Habit with longest streak.",
+                                               "Completed tasks.",
                                                "Return to home screen."]
                                       ).ask()
         else:
@@ -353,6 +355,13 @@ def __analyse_all_my_habits():
                                   )
         elif task == "Habit with longest streak.":
             __print_result(analyse_habits(task, active_habits=all_active_habits))
+
+        elif task == "Completed tasks.":
+            habit_name = questionary.select("Select a habit you want to see the completed tasks for:",
+                                       choices=[habit.name for habit in all_active_habits]).ask()
+            habit_id = get_habit_by_name(db, habit_name, logged_in_as).habit_id
+            output = analyse_habits(task, completed_tasks=get_all_tasks(db, habit_id))
+            __print_result(output)
         else:
             in_analysis = False
 

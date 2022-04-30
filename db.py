@@ -1,3 +1,4 @@
+import datetime
 import sqlite3
 import uuid
 from custom_exceptions import UserNameAlreadyExistsError, UserNameIsUnknownError, \
@@ -199,8 +200,13 @@ def __is_habit_item_stored(db, name, user_name):
 
 
 # debug_db = get_db(":memory:n")
-# create = datetime.datetime.now()
-# store_habit_item(debug_db, "debug 1", "user1", create, 4, "tomorrow")
-# store_habit_item(debug_db, "debug 2", "user1", create, 6, "today")
-# store_habit_item(debug_db, "debug 3", "user1", create, 1, "yesterday", False)
+# create = datetime.datetime.now().replace(microsecond=0)
+# store_habit_item(debug_db, "some id", "debug 1", "user1", create, 4, "tomorrow")
+# store_habit_item(debug_db, "some other id", "debug 2", "user1", create, 6, "today")
+# # store_habit_item(debug_db, "debug 3", "user1", create, 1, "yesterday", False)
 # print(get_all_habit_items(debug_db, "user1", True))
+#
+# store_task_item(debug_db, create, "some id")
+# store_task_item(debug_db, create, "some id")
+# store_task_item(debug_db, create, "some id")
+# print(get_tasks_by_habit_id(debug_db, "some id"))
