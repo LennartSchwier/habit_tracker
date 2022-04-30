@@ -130,26 +130,26 @@ def get_habit_item_by_name(db, name, user_name):
         return None
 
 
-def store_task_item(db, created, habit_id):
+def store_task_item(db, created, habit_name):
     cur = db.cursor()
-    cur.execute("INSERT INTO tasks VALUES (:task_id, :created, :habit_id)",
+    cur.execute("INSERT INTO tasks VALUES (:task_id, :created, :habit_name)",
                 {
                     "task_id": str(uuid.uuid4()),
                     "created": created,
-                    "habit_id": habit_id
+                    "habit_name": habit_name
                 })
     db.commit()
 
 
-def get_tasks_by_habit_id(db, habit_id):
+def get_tasks_by_habit_name(db, habit_name):
     cur = db.cursor()
-    cur.execute("SELECT * FROM tasks WHERE habit_id=:habit_id", {"habit_id": habit_id})
+    cur.execute("SELECT * FROM tasks WHERE habit_name=:habit_name", {"habit_name": habit_name})
     return cur.fetchall()
 
 
-def remove_tasks_by_habit_id(db, habit_id):
+def remove_tasks_by_habit_name(db, habit_name):
     cur = db.cursor()
-    cur.execute("DELETE FROM tasks WHERE habit_id=:habit_id", {"habit_id": habit_id})
+    cur.execute("DELETE FROM tasks WHERE habit_name=:habit_name", {"habit_name": habit_name})
     db.commit()
 
 
@@ -175,8 +175,8 @@ def __create_tables(db):
     cur.execute("""CREATE TABLE IF NOT EXISTS tasks (
         task_id TEXT,
         created DATETIME,
-        habit_id TEXT,
-        FOREIGN KEY (habit_id) REFERENCES habits(habit_id)
+        habit_name TEXT,
+        FOREIGN KEY (habit_name) REFERENCES habits(name)
     )""")
     db.commit()
 

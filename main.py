@@ -1,7 +1,8 @@
 import questionary
 import hashlib
 import uuid
-from db_logic import connect_to_db, add_habit, remove_habit, \
+from setup import setup_db, teardown_db
+from db_logic import add_habit, remove_habit, \
     update_streaks, get_habit_by_name, get_all_habits, update_active_status, get_all_tasks
 from user_logic import add_user, get_user_by_name, validate_password, get_all_users, remove_user
 from analysis import analyse_habits
@@ -27,30 +28,8 @@ all_inactive_habits = []
 # TODO make global lists of all active and all inactive habits
 
 def cli():
-    db = connect_to_db()  # ":memory:"
-
-    # cur = db.cursor()
-    # cur.execute("""INSERT INTO users VALUES (:user_id, :user_name, :password, :is_admin)""",
-    #             {
-    #                 "user_id": "some id",
-    #                 "user_name": "some user",
-    #                 "password": "some password",
-    #                 "is_admin": "False"
-    #             })
-    # cur.execute("""INSERT INTO users VALUES (:user_id, :user_name, :password, :is_admin)""",
-    #             {
-    #                 "user_id": "some id",
-    #                 "user_name": "other user",
-    #                 "password": "user password",
-    #                 "is_admin": "False"
-    #             })
-    # cur.execute("""INSERT INTO users VALUES (:user_id, :user_name, :password, :is_admin)""",
-    #             {
-    #                 "user_id": "some id",
-    #                 "user_name": "admin",
-    #                 "password": "789cf532419e99b67093f10b9059465900d073c466c25efd00771189d38f7e66",  # "debug"
-    #                 "is_admin": "True"
-    #             })
+    # db = connect_to_db()  # ":memory:"
+    db = setup_db()
 
     questionary.print("Hello there and welcome to the Habit Tracker! 🤖", style=feedback_style)
     global stop
@@ -358,7 +337,8 @@ def __analyse_all_my_habits(db):
 
         elif task == "Completed tasks.":
             habit_name = questionary.select("Select a habit you want to see the completed tasks for:",
-                                       choices=[habit.name for habit in all_active_habits]).ask()
+                                            choices=[habit.name for habit in all_active_habits]).ask()
+            questionary.print("Here should be some tasks...")
             habit_id = get_habit_by_name(db, habit_name, logged_in_as).habit_id
             output = analyse_habits(task, completed_tasks=get_all_tasks(db, habit_id))
             __print_result(output)
@@ -370,6 +350,7 @@ def __exit_program():
     """Function that terminates the program after asking for user confirmation"""
     if questionary.confirm("Are you sure you want to exit?", style=custom_style, auto_enter=False).ask():
         questionary.print("Bye Bye! 🦄", style=feedback_style)
+        teardown_db()
         global enter
         enter = False
 

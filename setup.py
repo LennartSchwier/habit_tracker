@@ -1,4 +1,6 @@
 import uuid
+import hashlib
+import os
 from datetime import datetime, timedelta
 from db import get_db
 
@@ -20,6 +22,11 @@ def setup_db():
     days_since_completed = [8, 7, 4, 2]
     for value in days_since_completed:
         __store_task(db, value, "go running")
+    return db
+
+
+def teardown_db():
+    os.remove("test.db")
 
 
 def __store_user(db, user_name, password):
@@ -29,10 +36,11 @@ def __store_user(db, user_name, password):
         {
             "user_id": str(uuid.uuid4()),
             "user_name": user_name,
-            "password": password,
+            "password": hashlib.sha3_256(password.encode()).hexdigest(),
             "is_admin": False
         }
     )
+    db.commit()
 
 
 def __store_habit(db, habit_name, user_name, created, period, deadline, is_active, longest):
@@ -50,6 +58,7 @@ def __store_habit(db, habit_name, user_name, created, period, deadline, is_activ
             "longest": longest
         }
     )
+    db.commit()
 
 
 def __store_task(db, days_since_completed, habit_id):
@@ -63,3 +72,4 @@ def __store_task(db, days_since_completed, habit_id):
             "habit_id": habit_id
         }
     )
+    db.commit()
