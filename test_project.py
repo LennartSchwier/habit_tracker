@@ -100,23 +100,23 @@ class TestHabits:
                         "is_active": False,
                         "longest": 83
                     })
-        cur.execute("INSERT INTO tasks VALUES (:task_id, :created, :habit_id)",
+        cur.execute("INSERT INTO tasks VALUES (:task_id, :created, :habit_name)",
                     {
                         "task_id": "1",
                         "created": self.created,
-                        "habit_id": "some id"
+                        "habit_name": "first habit"
                     })
-        cur.execute("INSERT INTO tasks VALUES (:task_id, :created, :habit_id)",
+        cur.execute("INSERT INTO tasks VALUES (:task_id, :created, :habit_name)",
                     {
                         "task_id": "2",
                         "created": self.created,
-                        "habit_id": "some id"
+                        "habit_name": "first habit"
                     })
-        cur.execute("INSERT INTO tasks VALUES (:task_id, :created, :habit_id)",
+        cur.execute("INSERT INTO tasks VALUES (:task_id, :created, :habit_name)",
                     {
                         "task_id": "1",
                         "created": self.created,
-                        "habit_id": "some other id"
+                        "habit_name": "second habit"
                     })
         self.db.commit()
 
@@ -253,7 +253,7 @@ class TestHabits:
         # TODO Test that removing a non-existent habit raises a HabitIsUnknownError
 
         # Test that all completed tasks for a habit are received from database
-        received_tasks = get_all_tasks(self.db, "some id")
+        received_tasks = get_all_tasks(self.db, "first habit")
         assert type(received_tasks) is list and len(received_tasks) is 2
 
     def test_analysis(self):
@@ -263,29 +263,29 @@ class TestHabits:
         choice = "Currently tracked habits."
         output = analyse_habits(choice, active_habits=active_habits)
         assert output == ['first habit:\n'
-                            '            Created: 2022-04-21 18:00:00. Period: 2 days. Deadline: '
-                            '2032-04-21 18:00:00. \n'
-                            '            Current streak: 2. Longest streak: 7.\n'
-                            '            ------------------------------------------',
-                            'second habit:\n'
-                            '            Created: 2022-04-21 18:00:00. Period: 5 days. Deadline: '
-                            '2032-04-21 18:00:00. \n'
-                            '            Current streak: 1. Longest streak: 9.\n'
-                            '            ------------------------------------------',
-                            'third habit:\n'
-                            '            Created: 2022-04-21 18:00:00. Period: 2 days. Deadline: '
-                            '2032-04-21 18:00:00. \n'
-                            '            Current streak: 0. Longest streak: 0.\n'
-                            '            ------------------------------------------']
+                          '            Created: 2022-04-21 18:00:00. Period: 2 days. Deadline: '
+                          '2032-04-21 18:00:00. \n'
+                          '            Current streak: 2. Longest streak: 7.\n'
+                          '            ------------------------------------------',
+                          'second habit:\n'
+                          '            Created: 2022-04-21 18:00:00. Period: 5 days. Deadline: '
+                          '2032-04-21 18:00:00. \n'
+                          '            Current streak: 1. Longest streak: 9.\n'
+                          '            ------------------------------------------',
+                          'third habit:\n'
+                          '            Created: 2022-04-21 18:00:00. Period: 2 days. Deadline: '
+                          '2032-04-21 18:00:00. \n'
+                          '            Current streak: 0. Longest streak: 0.\n'
+                          '            ------------------------------------------']
 
         # Test that a list with all paused habits and its associated details is returned
         inactive_habits = get_all_habits(self.db, "test user", False)
         choice = "Paused habits."
         output = analyse_habits(choice, inactive_habits=inactive_habits)
         assert output == ['inactive habit: \n'
-                            '            Period: 2 days. \n'
-                            '            Current streak: 0. Longest streak: 83.\n'
-                            '            ------------------------------------------']
+                          '            Period: 2 days. \n'
+                          '            Current streak: 0. Longest streak: 83.\n'
+                          '            ------------------------------------------']
 
         # Test that a list with all habits with period 2 is returned
         choice = "All habits with same period."
@@ -298,11 +298,12 @@ class TestHabits:
         assert output == ["second habit with 9 times"]
 
         # Test that all completed tasks for a habit are returned
-        completed_tasks = get_all_tasks(self.db, "some id")
+        completed_tasks = get_all_tasks(self.db, "first habit")
         choice = "Completed tasks."
         output = analyse_habits(choice, completed_tasks=completed_tasks)
         assert output == ['1. Task. Completed on: 2022-04-21 18:00:00', '2. Task. Completed on: 2022-04-21 18:00:00']
-#
+
+    #
     @staticmethod
     def teardown_method():
         os.remove("test.db")
