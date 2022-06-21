@@ -1,3 +1,17 @@
+"""
+Defines custom exceptions.
+
+Exceptions:
+    UserNameAlreadyExistsError
+    UserNameIsUnknownError
+    HabitNameAlreadyExistsError
+    HabitNameIsUnknownError
+    HabitSaveError
+    HabitDeletionError
+    HabitUpdateError
+    MissingAuthorizationError
+    UpdateActiveStatusError
+"""
 class UserNameAlreadyExistsError(Exception):
 
     def __init__(self, message="A user with that name already exists!"):
