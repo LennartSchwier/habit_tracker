@@ -3,19 +3,33 @@ Controls all database functionalities.
 
 Functions:
     get_db(name="main.db") -> sqlite3 database
+        Returns sqlite3 database with the necessary tables.
     store_user_item(db, user_name, password, is_admin)
+        Inserts a new user item into "users" table or raises an exception if the user item already exists.
     delete_user_item(db, user_name)
+        Deletes a user item from the "users" table or raises an exception if the user item does not exist.
     get_user_item_by_name(db, user_name) -> list
+        Returns a user item by username if user exists otherwise None is returned.
     get_all_user_items(db) -> list
+        Returns a list with all stored user items.
     store_habit_item(db, habit_id, name, user_name, created, period, deadline, is_active=True, longest=0)
+        Stores a new habit item or raises an exception if a habit item with the same name is already in the database.
     delete_habit_item(db, name, user_name)
+        Deletes a habit item or raises an exception if the name of the habit does not exist in the database.
     update_streaks_habit_item(db, name, user_name, deadline, longest)
+        Updates the deadline and streak of a habit item.
     update_active_status_habit_item(db, name, user_name, deadline, is_active)
+            Sets the active status of a habit item to active or inactive.
     get_all_habit_items(db, user_name, is_active) -> list
+        Returns a list with all habit items with a given active status stored for a particular user.
     get_habit_item_by_name(db, name, user_name) -> list
+        Returns a list with a habit item if it exists otherwise None is returned.
     store_task_item(db, created, habit_name)
+        Assigns a random UUID to a new task item and stores it in the "tasks" table.
     get_tasks_by_habit_name(db, habit_name) -> list
+        Returns a list with all task items that belong to a given habit item.
     remove_tasks_by_habit_name(db, habit_name)
+        Removes all stored task items of a given habit item.
 """
 
 import sqlite3
