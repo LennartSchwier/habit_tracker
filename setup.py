@@ -10,6 +10,8 @@ def setup_db():
     for user in ["John", "Jane"]:
         __store_user(db, user, user)
 
+    __store_admin(db)
+
     __store_habit(
         db=db,
         habit_name="sleep eight hours",
@@ -67,7 +69,21 @@ def __store_user(db, user_name, password):
             "user_id": str(uuid.uuid4()),
             "user_name": user_name,
             "password": hashlib.sha3_256(password.encode()).hexdigest(),
-            "is_admin": False
+            "is_admin": "False"
+        }
+    )
+    db.commit()
+
+
+def __store_admin(db):
+    cur = db.cursor()
+    cur.execute(
+        "INSERT INTO users VALUES (:user_id, :user_name, :password, :is_admin)",
+        {
+            "user_id": str(uuid.uuid4()),
+            "user_name": "Admin",
+            "password": hashlib.sha3_256("Admin".encode()).hexdigest(),
+            "is_admin": "True"
         }
     )
     db.commit()
