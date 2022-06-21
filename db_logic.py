@@ -1,5 +1,5 @@
 from db import store_habit_item, delete_habit_item, get_habit_item_by_name, \
-    update_streaks_habit_item, get_db, get_all_habit_items, store_task_item, get_tasks_by_habit_name, \
+    update_streaks_habit_item, get_db, get_all_habit_items_by_active_status, store_task_item, get_tasks_by_habit_name, \
     remove_tasks_by_habit_name, update_active_status_habit_item
 from habit import Habit
 from task import Task
@@ -30,7 +30,7 @@ def get_habit_by_name(db, name: str, user_name: str):
 
 def get_all_habits(db, user_name: str, is_active: bool):
     all_habits = []
-    for habit_item in get_all_habit_items(db, user_name, is_active):
+    for habit_item in get_all_habit_items_by_active_status(db, user_name, is_active):
         habit = Habit(
             habit_id=habit_item[0],
             name=habit_item[1],
