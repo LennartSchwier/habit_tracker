@@ -1,12 +1,33 @@
+"""
+Contains functions to set up and teardown a test database.
+
+Functions:
+    setup_db()
+        Connects to a sqlite3 database and stores various habits, tasks, and users in it.
+    teardown_db()
+        Deletes the test database file.
+
+Var:
+    db_name: str
+        Name of the test database
+"""
 import uuid
 import hashlib
 import os
 from datetime import datetime, timedelta
 from db import get_db
 
+db_name = "test.db"
+
 
 def setup_db():
-    db = get_db("test.db")
+    """
+    Connects to a sqlite3 database and stores various habits, tasks, and users in it.
+
+    Return:
+        db: sqlite3 db
+    """
+    db = get_db(db_name)
     for user in ["John", "Jane"]:
         __store_user(db, user, user)
 
@@ -58,10 +79,12 @@ def setup_db():
 
 
 def teardown_db():
-    os.remove("test.db")
+    """Deletes the test database file."""
+    os.remove(db_name)
 
 
 def __store_user(db, user_name, password):
+    # Stores a user item in the given database.
     cur = db.cursor()
     cur.execute(
         "INSERT INTO users VALUES (:user_id, :user_name, :password, :is_admin)",
@@ -76,6 +99,7 @@ def __store_user(db, user_name, password):
 
 
 def __store_admin(db):
+    # Stores an admin item in the given database.
     cur = db.cursor()
     cur.execute(
         "INSERT INTO users VALUES (:user_id, :user_name, :password, :is_admin)",
@@ -90,6 +114,7 @@ def __store_admin(db):
 
 
 def __store_habit(db, habit_name, user_name, created, period, deadline, is_active, longest):
+    # Stores a habit item in the given database.
     cur = db.cursor()
     cur.execute(
         "INSERT INTO habits VALUES (:habit_id, :name, :user_name, :created, :period, :deadline, :is_active, :longest)",
@@ -108,6 +133,7 @@ def __store_habit(db, habit_name, user_name, created, period, deadline, is_activ
 
 
 def __store_task(db, days_since_completed, habit_name):
+    # Stores a task item in the given database.
     created = datetime.now().replace(microsecond=0) - timedelta(days=days_since_completed)
     cur = db.cursor()
     cur.execute(
