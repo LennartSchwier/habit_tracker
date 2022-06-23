@@ -3,14 +3,21 @@ Analyses the stored habits of the current user and returns them in a list.
 
 Functions:
     analyse_habits() -> list
+        Receives stored habits, performs different analysis task on them and returns the result as a list.
 """
+
+
 def analyse_habits(choice: str, **kwargs) -> list:
     """
     Receives stored habits, performs different analysis task on them and returns the result as a list.
 
+    User choices to analyse the habits are "Currently tracked habits.", "Paused habits.",
+    "All habits with same period.", "Habit with longest streak.", "Completed tasks."
+
     Parameters:
         choice (str): The chosen analysis task
-        kwargs: Filter active, inactive or completed habits from all stored habits
+        kwargs: Can be a list of either active or inactive habits or completed tasks
+                and an integer for the period in days.
 
     Returns:
         (list): The result of the analysis
