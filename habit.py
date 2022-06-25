@@ -59,7 +59,6 @@ class Habit:
         """
         assert period >= 1, f"Period {period} has to be greater or equal than one"
 
-        # TODO private parameters, timezone
         self.habit_id = habit_id
         self.name = name
         self.created = created

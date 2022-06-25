@@ -55,9 +55,6 @@ home_choices = {
 }
 
 
-# TODO put choices strings in variables
-# TODO make global lists of all active and all inactive habits
-
 def cli():
     """
     Controls all functionalities of the questionary cli.
@@ -159,7 +156,7 @@ def __sign_up(db):
         else:
             questionary.print("Your passwords did not match.", style=feedback_style)
     new_user = User(user_name, password)
-    if password == "789cf532419e99b67093f10b9059465900d073c466c25efd00771189d38f7e66":  # TODO
+    if password == "789cf532419e99b67093f10b9059465900d073c466c25efd00771189d38f7e66":
         new_user.is_admin = "True"
     add_user(db, new_user)
     if get_user_by_name(db, new_user.user_name):
