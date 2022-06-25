@@ -1,3 +1,26 @@
+"""
+Contains the main module of the habit program.
+
+Function:
+    cli()
+        Controls all functionalities of the questionary cli.
+
+Vars:
+    feedback_style: str
+        Style template for program feedback
+    custom_style: questionary.Style
+        Questionary style template for program questions
+    stop: bool
+        Boolean to control program flow
+    enter: bool
+        Boolean to control program flow
+    logged_in_as: str
+        Username of the currently logged-in user
+    all_active_habits: list
+        A list of all active habits stored for the current user
+    all_inactive_habits: list
+        A list of all inactive habits stored for the current user
+"""
 import questionary
 import hashlib
 import uuid
@@ -22,14 +45,28 @@ enter = False
 logged_in_as = ""
 all_active_habits = []
 all_inactive_habits = []
+home_choices = {
+    "add": "Add a new habit",
+    "complete": "Complete a task",
+    "pause": "Pause/Reactivate a habit",
+    "remove": "Remove a habit",
+    "analyse": "Analyse my habits",
+    "exit": "Exit program"
+}
 
 
 # TODO put choices strings in variables
 # TODO make global lists of all active and all inactive habits
 
 def cli():
-    # db = connect_to_db()  # ":memory:"
-    db = setup_db()
+    """
+    Controls all functionalities of the questionary cli.
+
+
+    :return:
+    """
+    # db = connect_to_db()      # Use ":memory:" parameter for debugging
+    db = setup_db()  # Test database prefilled with users, habits and tasks
 
     questionary.print("Hello there and welcome to the Habit Tracker! 🤖", style=feedback_style)
     global stop
@@ -44,31 +81,32 @@ def cli():
         global enter
         while enter:
             choice = __show_home_screen(db, logged_in_as)
-            if choice == "Add a new habit":
+            if choice == home_choices["add"]:
                 __add_a_new_habit(db, logged_in_as)
-            elif choice == "Complete a task":
+            elif choice == home_choices["complete"]:
                 __complete_a_task(db, logged_in_as)
-            elif choice == "Pause/Reactivate a habit":
+            elif choice == home_choices["pause"]:
                 __pause_reactivate_habit(db, logged_in_as)
-            elif choice == "Remove a habit":
+            elif choice == home_choices["remove"]:
                 __remove_habit(db, logged_in_as)
-            elif choice == "Analyse my habits":
+            elif choice == home_choices["analyse"]:
                 __analyse_all_my_habits(db)
-            elif choice == "Exit program":
+            elif choice == home_choices["exit"]:
                 __exit_program()
         else:
             stop = True
 
 
 def __login(db):
+    # Prompts user to enter login credentials and validates entries with database.
     valid = False
     while not valid:
-        questions = [
+        login_questions = [
             {
                 "type": "text",
                 "name": "user_name",
-                "message": "Enter your name to login:",
-                "validate": lambda name: True if len(name) > 0 else "Please enter a name!"
+                "message": "Enter your username to login:",
+                "validate": lambda name: True if len(name) > 0 else "Please enter a username!"
             },
             {
                 "type": "password",
@@ -77,7 +115,7 @@ def __login(db):
                 "validate": lambda password: True if len(password) else "Please enter a password!"
             }
         ]
-        answers = questionary.prompt(questions)
+        answers = questionary.prompt(login_questions)
         if validate_password(db, answers.get("user_name"),
                              hashlib.sha3_256(answers.get("password").encode()).hexdigest()
                              ):
@@ -87,54 +125,57 @@ def __login(db):
             enter = True
             valid = True
         else:
-            questionary.print("Name or password are incorrect.", style=feedback_style)
+            questionary.print("Username or password are incorrect.", style=feedback_style)
 
 
 def __sign_up(db):
+    # Asks user for a username and password and saves them as new user in the database,
+    # if successful user is directed to the login screen.
     user_name = ""
     password = ""
     valid_user_name = False
     valid_password = False
     while not valid_user_name:
         user_name = questionary.text(
-            "Please enter your name:",
-            validate=lambda name: True if len(name) > 0 else "Enter a name!"
+            "Please enter a username:",
+            validate=lambda name: True if len(name) > 0 else "Enter a username!"
         ).ask()
         if get_user_by_name(db, user_name) is None:
             valid_user_name = True
         else:
-            questionary.print(f"Sorry, the name '{user_name}' already exists.", style=feedback_style)
+            questionary.print(f"Sorry, the username '{user_name}' already exists.", style=feedback_style)
     while not valid_password:
-        first_entry = questionary.password(
+        password_entry = questionary.password(
             "Please enter a password:",
             validate=lambda phrase: True if len(phrase) > 0 else "Enter a password!"
         ).ask()
-        second_entry = questionary.password(
-            "Please enter the password again:",
+        password_confirmation = questionary.password(
+            "Please enter the password again for confirmation:",
             validate=lambda phrase: True if len(phrase) > 0 else "Enter a password!"
         ).ask()
-        if first_entry == second_entry:
-            password = hashlib.sha3_256(second_entry.encode()).hexdigest()
+        if password_entry == password_confirmation:
+            password = hashlib.sha3_256(password_confirmation.encode()).hexdigest()
             valid_password = True
         else:
             questionary.print("Your passwords did not match.", style=feedback_style)
     new_user = User(user_name, password)
-    if password == "789cf532419e99b67093f10b9059465900d073c466c25efd00771189d38f7e66":  # TODO remove
+    if password == "789cf532419e99b67093f10b9059465900d073c466c25efd00771189d38f7e66":  # TODO
         new_user.is_admin = "True"
     add_user(db, new_user)
     if get_user_by_name(db, new_user.user_name):
         questionary.print("You have successfully signed up! Welcome 🖖", style=feedback_style)
         __login(db)
     else:
-        questionary.print("Something went wrong...", style=feedback_style)
+        questionary.print("Something went wrong. Please try again.", style=feedback_style)
 
 
-def __show_home_screen(db, user_name):
-    """Function that shows all stored habits and possible actions to user. It returns user's choice as :var choice"""
+def __show_home_screen(db, user_name: str) -> str:
+    # Receives habit database entries and shows possible actions to the user according to the database entries.
+    # The user choice is then returned as output.
     global all_active_habits
-    all_active_habits = get_all_habits(db, user_name, True)
+    all_active_habits = get_all_habits(db, user_name, is_active=True)
     global all_inactive_habits
-    all_inactive_habits = get_all_habits(db, user_name, False)
+    all_inactive_habits = get_all_habits(db, user_name, is_active=False)
     if get_user_by_name(db, user_name).is_admin == "True":
         __admin_tasks(db, active_user=user_name)
     elif all_active_habits:
@@ -145,36 +186,38 @@ def __show_home_screen(db, user_name):
             questionary.print(
                 f"{habit[0]}. Deadline: {habit[2]}.", style="pink bold")
         answer = questionary.select("What do you want to do?", style=custom_style, choices=[
-            "Add a new habit",
-            "Complete a task",
-            "Pause/Reactivate a habit",
-            "Remove a habit",
-            "Analyse my habits",
-            "Exit program"
+            home_choices["add"],
+            home_choices["complete"],
+            home_choices["pause"],
+            home_choices["remove"],
+            home_choices["analyse"],
+            home_choices["exit"]
         ]).ask()
         return answer
     elif all_inactive_habits:
-        questionary.print(f"Alright {user_name}, let's go..! 🦾\nCurrently you only have paused habits.",
-                          style=feedback_style)
+        questionary.print(
+            f"Alright {user_name}, let's go..! 🦾\nCurrently you only have paused habits.", style=feedback_style
+        )
         answer = questionary.select("What do you want to do?", style=custom_style, choices=[
-            "Add a new habit",
-            "Pause/Reactivate a habit",
-            "Analyse my habits",
-            "Exit program"
+            home_choices["add"],
+            home_choices["pause"],
+            home_choices["analyse"],
+            home_choices["exit"]
         ]).ask()
         return answer
     else:
-        questionary.print(f"Alright {user_name}, let's go..! 🦾\nCurrently you are not tracking any habits.",
-                          style=feedback_style)
+        questionary.print(
+            f"Alright {user_name}, let's go..! 🦾\nCurrently you are not tracking any habits.", style=feedback_style
+        )
         answer = questionary.select("What do you want to do?", style=custom_style, choices=[
-            "Add a new habit",
-            "Exit program"
+            home_choices["add"],
+            home_choices["exit"]
         ]).ask()
         return answer
 
 
 def __add_a_new_habit(db, user_name: str):
-    """Function that adds a new habit after user confirmation and gives feedback from database"""
+    # Adds a new habit after user confirmation and gives feedback from database.
     questions = [
         {
             "type": "text",
@@ -185,7 +228,7 @@ def __add_a_new_habit(db, user_name: str):
         {
             "type": "text",
             "name": "period",
-            "message": "Length of repetition period in days?",
+            "message": "Length of periodicity in days?",
             "validate": lambda num: True if num.isnumeric() and int(num) > 0 else "Please enter a natural number!"
         }
     ]
@@ -201,7 +244,7 @@ def __add_a_new_habit(db, user_name: str):
         deadline=habit_deadline,
         is_active=True)
     save = questionary.confirm(
-        f"Save {new_habit.name} with a repetition period of {new_habit.period} days?",
+        f"Save {new_habit.name} with a periodicity of {new_habit.period} days?",
         style=custom_style,
         auto_enter=False
     ).ask()
@@ -213,13 +256,14 @@ def __add_a_new_habit(db, user_name: str):
 
 
 def __complete_a_task(db, user_name: str):
+    # The current streak of the selected habit is increased by one after user confirmation.
     habit_to_update = questionary.select("Select a habit you want to complete a task for:",
                                          choices=[habit.name for habit in all_active_habits]
                                          ).ask()
-    old_streak_length = get_habit_by_name(db, habit_to_update, user_name).current_streak
     update = questionary.confirm(
         f"Complete task for '{habit_to_update}'?", style=custom_style, auto_enter=False
     ).ask()
+    old_streak_length = get_habit_by_name(db, habit_to_update, user_name).current_streak
     if update:
         update_streaks(db, habit_to_update, user_name)
         new_streak_length = get_habit_by_name(db, habit_to_update, user_name).current_streak
@@ -228,29 +272,35 @@ def __complete_a_task(db, user_name: str):
                 f"'{habit_to_update}' has been updated. Your current streak length is {new_streak_length}.",
                 style=feedback_style
             )
-
+        else:
+            raise HabitUpdateError
     else:
         questionary.print(f"'{habit_to_update}' has not been updated", style=feedback_style)
 
 
-def __pause_reactivate_habit(db, user_name):
-    # TODO check that "reactivate a habit" is only shown when a paused habit exists
-    in_pause = True
-    while in_pause:
+def __pause_reactivate_habit(db, user_name: str):
+    # Shows active and inactive habits to the user to change the corresponding status.
+    in_pause_menu = True
+    while in_pause_menu:
+        choices = {
+            "pause": "Pause a habit.",
+            "reactivate": "Reactivate a habit.",
+            "return": "Return to home screen."
+        }
         global all_active_habits
         all_active_habits = get_all_habits(db, user_name, True)
         global all_inactive_habits
         all_inactive_habits = get_all_habits(db, user_name, False)
-        if not all_active_habits and all_inactive_habits:
+        if all_active_habits and not all_inactive_habits:       # Only active habits are stored
             task = questionary.select("Please select:",
-                                      choices=["Reactivate a habit.", "Return to home screen."]).ask()
-        elif all_active_habits and not all_inactive_habits:
+                                      choices=[choices["pause"], choices["return"]]).ask()
+        elif not all_active_habits and all_inactive_habits:     # Only inactive habits are stored
             task = questionary.select("Please select:",
-                                      choices=["Pause a habit.", "Return to home screen."]).ask()
-        else:
+                                      choices=[choices["reactivate"], choices["return"]]).ask()
+        else:                                                   # Active and inactive habits are stored
             task = questionary.select("Please select:",
-                                      choices=["Pause a habit.", "Reactivate a habit.", "Return to home screen."]).ask()
-        if task == "Pause a habit.":
+                                      choices=[choices["pause"], choices["reactivate"], choices["return"]]).ask()
+        if task == choices["pause"]:
             new_status = False
             habit = questionary.select("Select a habit you want to pause:",
                                        choices=[habit.name for habit in all_active_habits]
@@ -261,7 +311,7 @@ def __pause_reactivate_habit(db, user_name):
                 __check_updated_successfully(db, habit, user_name, new_status)
             else:
                 questionary.print("Habit has not been paused.", style=feedback_style)
-        elif task == "Reactivate a habit.":
+        elif task == choices["reactivate"]:
             new_status = True
             habit = questionary.select("Select a habit you want to reactivate:",
                                        choices=[habit.name for habit in all_inactive_habits]
@@ -273,11 +323,11 @@ def __pause_reactivate_habit(db, user_name):
             else:
                 questionary.print("Habit has not been reactivated.", style=feedback_style)
         else:
-            in_pause = False
+            in_pause_menu = False
 
 
 def __remove_habit(db, user_name: str):
-    """Function that removes a habit after user confirmation and gives feedback from database"""
+    # Removes a habit after user confirmation and gives feedback from database.
     old_habit = questionary.select("Select a habit you want to remove:",
                                    choices=[habit.name for habit in all_active_habits]
                                    ).ask()
@@ -290,36 +340,46 @@ def __remove_habit(db, user_name: str):
 
 
 def __analyse_all_my_habits(db):
+    # Shows analysis options to user and receives requested data from analysis module.
     in_analysis = True
     while in_analysis:
+        entry_question = "What would you like to see?"
+        choices = {
+            "current": "Currently tracked habits.",
+            "paused": "Paused habits.",
+            "all": "All habits with same period.",
+            "longest": "Habit with longest streak.",
+            "completed": "Completed tasks.",
+            "return": "Return to home screen."
+        }
         if all_active_habits and all_inactive_habits:
-            task = questionary.select("What would you like to see?", style=custom_style,
-                                      choices=["Currently tracked habits.",
-                                               "Paused habits.",
-                                               "All habits with same period.",
-                                               "Habit with longest streak.",
-                                               "Completed tasks.",
-                                               "Return to home screen."]
+            task = questionary.select(entry_question, style=custom_style,
+                                      choices=[choices["current"],
+                                               choices["paused"],
+                                               choices["all"],
+                                               choices["longest"],
+                                               choices["completed"],
+                                               choices["return"]]
                                       ).ask()
         elif all_active_habits and not all_inactive_habits:
-            task = questionary.select("What would you like to see?", style=custom_style,
-                                      choices=["Currently tracked habits.",
-                                               "All habits with same period.",
-                                               "Habit with longest streak.",
-                                               "Completed tasks.",
-                                               "Return to home screen."]
+            task = questionary.select(entry_question, style=custom_style,
+                                      choices=[choices["current"],
+                                               choices["all"],
+                                               choices["longest"],
+                                               choices["completed"],
+                                               choices["return"]]
                                       ).ask()
         else:
-            task = questionary.select("What would you like to see?", style=custom_style,
-                                      choices=["Paused habits.",
-                                               "Return to home screen."]
+            task = questionary.select(entry_question, style=custom_style,
+                                      choices=[choices["paused"],
+                                               choices["return"]]
                                       ).ask()
 
-        if task == "Currently tracked habits.":
+        if task == choices["current"]:
             __print_result(analyse_habits(task, active_habits=all_active_habits))
-        elif task == "Paused habits.":
+        elif task == choices["paused"]:
             __print_result(analyse_habits(task, inactive_habits=all_inactive_habits))
-        elif task == "All habits with same period.":
+        elif task == choices["all"]:
             period = questionary.text("Enter period:",
                                       validate=lambda num: True if num.isnumeric() and int(num) > 0
                                       else "Please enter a natural number!",
@@ -332,10 +392,10 @@ def __analyse_all_my_habits(db):
                 questionary.print(f"You are not tracking any habits with a period of {period} days.",
                                   style=feedback_style
                                   )
-        elif task == "Habit with longest streak.":
+        elif task == choices["longest"]:
             __print_result(analyse_habits(task, active_habits=all_active_habits))
 
-        elif task == "Completed tasks.":
+        elif task == choices["completed"]:
             habit_name = questionary.select("Select a habit you want to see the completed tasks for:",
                                             choices=[habit.name for habit in all_active_habits]).ask()
             output = analyse_habits(task, completed_tasks=get_all_tasks(db, habit_name))
@@ -345,7 +405,7 @@ def __analyse_all_my_habits(db):
 
 
 def __exit_program():
-    """Function that terminates the program after asking for user confirmation"""
+    # Terminates the program after asking for user confirmation"""
     if questionary.confirm("Are you sure you want to exit?", style=custom_style, auto_enter=False).ask():
         questionary.print("Bye Bye! 🦄", style=feedback_style)
         teardown_db()
@@ -353,7 +413,8 @@ def __exit_program():
         enter = False
 
 
-def __admin_tasks(db, active_user):
+def __admin_tasks(db, active_user: str):
+    # Controls the administrator functionalities.
     in_admin_tasks = True
     while in_admin_tasks:
         all_users = get_all_users(db)
@@ -371,24 +432,24 @@ def __admin_tasks(db, active_user):
             __exit_program()
 
 
-def __create_list_of_habits_properties(db, user_name: str, is_active):
-    """Function that creates a list of names of all habits stored in the given database"""
+def __create_list_of_habits_properties(db, user_name: str, is_active: bool) -> list:
+    # Returns a list of the names of all habits stored in the given database.
     all_habits = get_all_habits(db, user_name, is_active)
     if len(all_habits) != 0:
         return [[habit.name, habit.period, habit.deadline, habit.current_streak, habit.longest_streak]
                 for habit in all_habits]
 
 
-def __check_saved_successfully(db, habit_name: str, user_name: str):
-    """Function that checks if the item is saved in database"""
+def __check_saved_successfully(db, habit_name: str, user_name: str) -> bool or HabitSaveError:
+    # Checks if the item was saved in the given database. Returns True if so otherwise rises an exception.
     if type(get_habit_by_name(db, habit_name, user_name)) is Habit:
         questionary.print("New habit saved successfully!", style="bold fg:cyan")
     else:
         raise HabitSaveError
 
 
-def __check_updated_successfully(db, habit_name: str, user_name: str, new_status: bool):
-    """Function that checks if the active status has changed in database"""
+def __check_updated_successfully(db, habit_name: str, user_name: str, new_status: bool) -> bool or HabitUpdateError:
+    # Checks if the habit's active status has been updated in the database.
     if get_habit_by_name(db, habit_name, user_name).is_active is new_status:
         questionary.print("Habit updated successfully!", style="bold fg:cyan")
     else:
@@ -396,7 +457,7 @@ def __check_updated_successfully(db, habit_name: str, user_name: str, new_status
 
 
 def __check_deleted_successfully(db, habit_name: str, user_name: str):
-    """Function that checks if the item is deleted from database"""
+    # Checks if the habit item is deleted from database.
     if get_habit_by_name(db, habit_name, user_name) is None:
         questionary.print("Habit deleted successfully!", style="bold fg:cyan")
     else:
@@ -404,7 +465,7 @@ def __check_deleted_successfully(db, habit_name: str, user_name: str):
 
 
 def __print_result(result):
-    """Function that prints output from the analysis module"""
+    # Prints output from the analysis module.
     for habit in result:
         questionary.print(habit, style=feedback_style)
 
