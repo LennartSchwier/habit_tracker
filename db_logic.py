@@ -1,5 +1,5 @@
 """
-Contains the logic to access all database functionalities.
+Contains the logic to access all database functionalities related to habit and task management.
 
 Functions:
     connect_to_db(name="main.db")
