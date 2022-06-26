@@ -28,7 +28,7 @@ def setup_db():
         db: sqlite3 db
     """
     db = get_db(db_name)
-    for user in ["John", "Jane"]:
+    for user in ["test user 1", "test user 2"]:
         __store_user(db, user, user)
 
     __store_admin(db)
@@ -36,7 +36,7 @@ def setup_db():
     __store_habit(
         db=db,
         habit_name="sleep eight hours",
-        user_name="John",
+        user_name="test user 1",
         created=datetime.now().replace(microsecond=0) - timedelta(days=28),
         period=1,
         deadline=datetime.now().replace(microsecond=0) + timedelta(days=1),
@@ -50,7 +50,7 @@ def setup_db():
     __store_habit(
         db=db,
         habit_name="go running",
-        user_name="John",
+        user_name="test user 1",
         created=datetime.now().replace(microsecond=0) - timedelta(days=17),
         period=3,
         deadline=datetime.now().replace(microsecond=0) + timedelta(days=2),
@@ -64,7 +64,7 @@ def setup_db():
     __store_habit(
         db=db,
         habit_name="see the dentist",
-        user_name="John",
+        user_name="test user 1",
         created=datetime.now().replace(microsecond=0) - timedelta(days=400),
         period=180,
         deadline=datetime.now().replace(microsecond=0) + timedelta(days=50),
