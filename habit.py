@@ -72,7 +72,7 @@ class Habit:
         """Updates deadline and streaks according to deadline."""
         if self.__is_within_deadline():
             self.current_streak += 1
-            self.deadline += timedelta(days=self.period)
+            self.deadline = datetime.now().replace(microsecond=0) + timedelta(days=self.period)
             if self.current_streak > self.longest_streak:
                 self.longest_streak = self.current_streak
         else:
