@@ -56,20 +56,16 @@ home_choices = {
 
 
 def cli():
-    """
-    Controls all functionalities of the questionary cli.
+    """Controls all functionalities of the questionary cli."""
 
-
-    :return:
-    """
     # db = connect_to_db()      # Use ":memory:" parameter for debugging
     db = setup_db()  # Test database prefilled with users, habits and tasks
 
     questionary.print("Hello there and welcome to the Habit Tracker! 🤖", style=feedback_style)
     global stop
     while not stop:
-        login = questionary.select("Please choose:", style=custom_style, choices=["Login", "Sign Up", "Exit"]).ask()
-        if login == "Login":
+        login = questionary.select("Please choose:", style=custom_style, choices=["Log In", "Sign Up", "Exit"]).ask()
+        if login == "Log In":
             __login(db)
         elif login == "Sign Up":
             __sign_up(db)
