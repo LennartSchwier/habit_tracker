@@ -12,6 +12,8 @@ Exceptions:
     MissingAuthorizationError
     UpdateActiveStatusError
 """
+
+
 class UserNameAlreadyExistsError(Exception):
 
     def __init__(self, message="A user with that name already exists!"):
@@ -50,7 +52,7 @@ class HabitDeletionError(Exception):
 
 class HabitUpdateError(Exception):
 
-    def __init__(self, message="Something went wrong trying to update the habit active status!"):
+    def __init__(self, message="Something went wrong trying to update the habit!"):
         self.message = message
 
 
