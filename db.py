@@ -40,13 +40,35 @@ from custom_exceptions import UserNameAlreadyExistsError, UserNameIsUnknownError
 
 def get_db(name="main.db"):
     """
-    Returns sqlite3 database with the necessary tables.
+    Returns sqlite3 database.
+
+    The database consists of three different tables:
+        habits:
+            habit_id TEXT PRIMARY KEY,
+            name TEXT,
+            user_name TEXT,
+            created DATETIME,
+            period INT,
+            deadline DATETIME,
+            is_active BOOL,
+            longest INT
+
+        users:
+            user_id TEXT,
+            user_name TEXT,
+            password TEXT,
+            is_admin BOOL
+
+        tasks:
+            task_id TEXT,
+            created DATETIME,
+            habit_name TEXT
 
     Param:
         name (str): Name of the database (Default: main.db)
 
     Return:
-        db (sqlite3 database): Database with tables "habits", "users" and "tasks"
+        db (sqlite3 database): Database with tables "habits", "users", and "tasks"
     """
     db = sqlite3.connect(name)
     __create_tables(db)
@@ -263,7 +285,7 @@ def get_habit_item_by_name(db, name, user_name):
     """
     Returns a list with a habit item if it exists otherwise None is returned.
 
-    Param:
+    Params:
         db: Database in which the habit item is stored
         name: Name of the habit item
         user_name: Only the habit items of this user are regarded
@@ -332,7 +354,7 @@ def remove_tasks_by_habit_name(db, habit_name):
 
 
 def __create_tables(db):
-    # Creates tables in database
+    # Creates tables in database.
     cur = db.cursor()
     cur.execute("""CREATE TABLE IF NOT EXISTS habits (
         habit_id TEXT PRIMARY KEY,
@@ -361,14 +383,14 @@ def __create_tables(db):
 
 
 def __is_user_item_stored(db, user_name):
-    # Checks if the username is present in the database
+    # Checks if the username is present in the database.
     cur = db.cursor()
     cur.execute("SELECT * FROM users WHERE user_name=:user_name", {"user_name": user_name})
     return len(cur.fetchall()) != 0
 
 
 def __is_habit_item_stored(db, name, user_name):
-    # Checks if the habit name is present in the database
+    # Checks if the habit name is present in the database.
     cur = db.cursor()
     cur.execute("SELECT * FROM habits WHERE name=:name AND user_name=:user_name",
                 {
