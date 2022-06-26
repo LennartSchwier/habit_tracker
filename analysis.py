@@ -16,10 +16,13 @@ def analyse_habits(choice: str, **kwargs) -> list:
 
     Parameters:
         choice (str): The chosen analysis task
-        kwargs: Can be a list of either active or inactive habits or completed tasks
-                and an integer for the period in days.
+        kwargs:
+            "active_habits": list of all habit instances with active status
+            "inactive_habits": list of all habit instances with inactive status
+            "completed_tasks": list of all task instances saved for a specific habit
+            "period": periodicity in days as integer
 
-    Returns:
+    Return:
         (list): The result of the analysis
     """
     active_habits = kwargs.get("active_habits")
