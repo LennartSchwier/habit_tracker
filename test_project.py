@@ -156,7 +156,7 @@ class TestHabits:
 
         # Test that length_of_streak param is updated correctly
         test_habit.complete_task()
-        assert test_habit.current_streak is 1 and test_habit.longest_streak is 1
+        assert test_habit.current_streak == 1 and test_habit.longest_streak == 1
 
         # Test that is_active status and deadline is updated correctly
         test_habit.set_active_status(False)
@@ -194,7 +194,7 @@ class TestHabits:
 
         # Test that a list with all stored users is returned
         all_users = get_all_users(self.db)
-        assert type(all_users) is list and len(all_users) is 3
+        assert type(all_users) == list and len(all_users) == 3
 
         # Test that an exception is raised when non-admin tries to delete user
         try:
@@ -206,7 +206,7 @@ class TestHabits:
 
         # Test that the user is removed from database
         remove_user(self.db, "test admin", "some other user")
-        assert len(get_all_users(self.db)) is 2
+        assert len(get_all_users(self.db)) == 2
 
         # Test that correct boolean is returned
         assert validate_password(self.db, "test user", "some password") is True
@@ -220,13 +220,13 @@ class TestHabits:
         # Test that the correct habit item is received from database
         received_object = get_habit_by_name(self.db, "first habit", "test user")
         assert type(received_object) is Habit and received_object.name == "first habit"
-        assert received_object.current_streak is 2 and received_object.longest_streak is 7
+        assert received_object.current_streak == 2 and received_object.longest_streak == 7
 
         # Test that the correct list with all stored habits is received from database
         all_active_habits = get_all_habits(self.db, "test user", True)
-        assert type(all_active_habits) is list and len(all_active_habits) is 3
+        assert type(all_active_habits) == list and len(all_active_habits) == 3
         all_inactive_habits = get_all_habits(self.db, "test user", False)
-        assert type(all_inactive_habits) is list and len(all_inactive_habits) is 1
+        assert type(all_inactive_habits) == list and len(all_inactive_habits) == 1
 
         # Test that the habit is added to the database
         test_habit = Habit(
@@ -239,7 +239,7 @@ class TestHabits:
         add_habit(self.db, test_habit, "test user")
         received_object = get_habit_by_name(self.db, test_habit.name, "test user")
         assert type(received_object) is Habit and received_object.name == "test habit"
-        assert len(get_all_habits(self.db, "test user", True)) is 4
+        assert len(get_all_habits(self.db, "test user", True)) == 4
 
         # Test that adding a habit with the same name raises a HabitNameAlreadyExistsError
         try:
@@ -251,33 +251,33 @@ class TestHabits:
 
         # Test that the habit is updated correctly (deadline and longest_streak)
         assert test_habit.deadline is self.deadline
-        assert test_habit.current_streak is 0 and test_habit.longest_streak is 0
+        assert test_habit.current_streak == 0 and test_habit.longest_streak == 0
         update_streaks(self.db, test_habit.name, "test user")
         received_object = get_habit_by_name(self.db, test_habit.name, "test user")
         assert received_object.deadline == self.deadline + timedelta(days=test_habit.period)
-        assert received_object.current_streak is 1 and received_object.longest_streak is 1
+        assert received_object.current_streak == 1 and received_object.longest_streak == 1
 
         # Test that the habit active status is changed to inactive in the database
         update_active_status(self.db, test_habit.name, "test user", False)
         received_object = get_habit_by_name(self.db, test_habit.name, "test user")
         assert received_object.is_active is False
         assert received_object.deadline == datetime.max - timedelta(microseconds=999999)
-        assert len(get_all_habits(self.db, "test user", False)) is 2
-        assert len(get_all_habits(self.db, "test user", True)) is 3
+        assert len(get_all_habits(self.db, "test user", False)) == 2
+        assert len(get_all_habits(self.db, "test user", True)) == 3
 
         # Test that the habit active status is changed to active in the database
         update_active_status(self.db, received_object.name, "test user", True)
         received_object = get_habit_by_name(self.db, received_object.name, "test user")
         assert received_object.is_active is True
-        assert len(get_all_habits(self.db, "test user", False)) is 1
-        assert len(get_all_habits(self.db, "test user", True)) is 4
+        assert len(get_all_habits(self.db, "test user", False)) == 1
+        assert len(get_all_habits(self.db, "test user", True)) == 4
 
         # Test that habit is removed from database
         remove_habit(self.db, test_habit.name, "test user")
         removed_habit = get_habit_by_name(self.db, test_habit.name, "test user")
         assert removed_habit is None
         all_active_habits = get_all_habits(self.db, "test user", True)
-        assert len(all_active_habits) is 3
+        assert len(all_active_habits) == 3
 
         # Test that removing a non-existent habit raises a HabitIsUnknownError
         try:
@@ -289,7 +289,7 @@ class TestHabits:
 
         # Test that all completed tasks for a habit are received from database
         received_tasks = get_all_tasks(self.db, "first habit")
-        assert type(received_tasks) is list and len(received_tasks) is 2
+        assert type(received_tasks) is list and len(received_tasks) == 2
 
     def test_analysis(self):
         """Tests functionalities of the analysis module."""
