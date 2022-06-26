@@ -1,3 +1,9 @@
+"""
+Contains all unit tests for the entire project with pytest as testing library.
+
+Class:
+    TestHabits
+"""
 import sqlite3
 import os
 
@@ -14,14 +20,31 @@ from datetime import datetime, timedelta
 
 
 class TestHabits:
+    """
+    Pytest testing class for all unit tests.
+
+    Methods:
+        setup_method()
+            Creates test database with one user, one admin, and five different habits.
+        test_habit_class()
+            Tests functionalities of the Habit class.
+        test_user_logic()
+            Tests functionalities of the user_logic module.
+        test_db_logic() # TODO
+            Tests functionalities of the db_logic module.
+        test_analysis()
+            Tests functionalities of the analysis module.
+        teardown_method()
+            Removes the test database file from the system.
+    """
     created = datetime.strptime("2022-04-21 18:00:00", "%Y-%m-%d %H:%M:%S")
     deadline = datetime.strptime("2032-04-21 18:00:00", "%Y-%m-%d %H:%M:%S")
 
     def setup_method(self):
+        """Creates test database with one user, one admin, and five different habits."""
         self.db = connect_to_db("test.db")
         cur = self.db.cursor()
 
-        # Inserting a test user and a test admin into the database users table
         cur.execute("""INSERT INTO users VALUES (
                     :user_id, :user_name, :password, :is_admin)""",
                     {
@@ -39,7 +62,6 @@ class TestHabits:
                         "is_admin": "True"
                     })
 
-        # Inserting five different habits into the database habits table
         cur.execute("""INSERT INTO habits VALUES (
                     :habit_id, :name, :user_name, :created, :period, :deadline, :is_active, :longest)""",
                     {
@@ -121,6 +143,7 @@ class TestHabits:
         self.db.commit()
 
     def test_habit_class(self):
+        """Tests functionalities of the Habit class."""
 
         test_habit = Habit(
             habit_id="some id",
@@ -157,6 +180,7 @@ class TestHabits:
             pytest.fail()
 
     def test_user_logic(self):
+        """Tests functionalities of the user_logic module."""
 
         # Test that the correct user item is received from database
         received_object = get_user_by_name(self.db, "test user")
@@ -189,6 +213,7 @@ class TestHabits:
         assert validate_password(self.db, "test user", "incorrect password") is False
 
     def test_db_logic(self):
+        """Tests functionalities of the db_logic module."""
 
         assert type(self.db) is sqlite3.Connection
 
@@ -257,6 +282,7 @@ class TestHabits:
         assert type(received_tasks) is list and len(received_tasks) is 2
 
     def test_analysis(self):
+        """Tests functionalities of the analysis module."""
 
         # Test that a list with all active habits and its associated details is returned
         active_habits = get_all_habits(self.db, "test user", True)
@@ -306,4 +332,5 @@ class TestHabits:
     #
     @staticmethod
     def teardown_method():
+        """Removes the test database file from the system."""
         os.remove("test.db")
