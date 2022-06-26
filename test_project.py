@@ -15,7 +15,7 @@ from user_logic import get_user_by_name, add_user, remove_user, get_all_users, v
 from db_logic import connect_to_db, add_habit, remove_habit, update_streaks, get_habit_by_name, get_all_habits, \
     update_active_status, get_all_tasks
 from analysis import analyse_habits
-from custom_exceptions import HabitNameAlreadyExistsError, MissingAuthorizationError
+from custom_exceptions import HabitNameAlreadyExistsError, MissingAuthorizationError, HabitNameIsUnknownError
 from datetime import datetime, timedelta
 
 
@@ -30,7 +30,7 @@ class TestHabits:
             Tests functionalities of the Habit class.
         test_user_logic()
             Tests functionalities of the user_logic module.
-        test_db_logic() # TODO
+        test_db_logic()
             Tests functionalities of the db_logic module.
         test_analysis()
             Tests functionalities of the analysis module.
@@ -257,16 +257,20 @@ class TestHabits:
         assert received_object.deadline == self.deadline + timedelta(days=test_habit.period)
         assert received_object.current_streak is 1 and received_object.longest_streak is 1
 
-        # Test that a paused habit is set inactive in the database
+        # Test that the habit active status is changed to inactive in the database
         update_active_status(self.db, test_habit.name, "test user", False)
         received_object = get_habit_by_name(self.db, test_habit.name, "test user")
         assert received_object.is_active is False
         assert received_object.deadline == datetime.max - timedelta(microseconds=999999)
         assert len(get_all_habits(self.db, "test user", False)) is 2
         assert len(get_all_habits(self.db, "test user", True)) is 3
-        # update_active_status(self.db, received_object.name, "test_user", True)
-        # received_object = get_habit_by_name(self.db, received_object.name, "test user")
-        # assert received_object.is_active is False
+
+        # Test that the habit active status is changed to active in the database
+        update_active_status(self.db, received_object.name, "test user", True)
+        received_object = get_habit_by_name(self.db, received_object.name, "test user")
+        assert received_object.is_active is True
+        assert len(get_all_habits(self.db, "test user", False)) is 1
+        assert len(get_all_habits(self.db, "test user", True)) is 4
 
         # Test that habit is removed from database
         remove_habit(self.db, test_habit.name, "test user")
@@ -275,7 +279,13 @@ class TestHabits:
         all_active_habits = get_all_habits(self.db, "test user", True)
         assert len(all_active_habits) is 3
 
-        # TODO Test that removing a non-existent habit raises a HabitIsUnknownError
+        # Test that removing a non-existent habit raises a HabitIsUnknownError
+        try:
+            remove_habit(self.db, "non existing habit", "test user")
+        except HabitNameIsUnknownError:
+            pass
+        else:
+            pytest.fail()
 
         # Test that all completed tasks for a habit are received from database
         received_tasks = get_all_tasks(self.db, "first habit")
