@@ -20,13 +20,14 @@ Vars:
         A list of all active habits stored for the current user
     all_inactive_habits: list
         A list of all inactive habits stored for the current user
+    home_choices: dict
+        All available choices the user can choose from on the home screen
 """
 import questionary
 import hashlib
 import uuid
-from setup import setup_db, teardown_db
 from db_logic import add_habit, remove_habit, \
-    update_streaks, get_habit_by_name, get_all_habits, update_active_status, get_all_tasks
+    update_streaks, get_habit_by_name, get_all_habits, update_active_status, get_all_tasks, connect_to_db
 from user_logic import add_user, get_user_by_name, validate_password, get_all_users, remove_user
 from analysis import analyse_habits
 from custom_exceptions import HabitSaveError, HabitUpdateError, HabitDeletionError
@@ -58,8 +59,7 @@ home_choices = {
 def cli():
     """Controls all functionalities of the questionary cli."""
 
-    # db = connect_to_db()      # Use ":memory:" parameter for debugging
-    db = setup_db()  # Test database prefilled with users, habits and tasks
+    db = connect_to_db()
 
     questionary.print("Hello there and welcome to the Habit Tracker! 🤖", style=feedback_style)
     global stop
@@ -85,9 +85,9 @@ def cli():
             elif choice == home_choices["analyse"]:
                 __analyse_all_my_habits(db)
             elif choice == home_choices["exit"]:
-                __exit_program()
+                enter = False
         else:
-            stop = True
+            __exit_program()
 
 
 def __login(db):
@@ -398,12 +398,11 @@ def __analyse_all_my_habits(db):
 
 
 def __exit_program():
-    # Terminates the program after asking for user confirmation"""
+    # Terminates the program after asking for user confirmation.
     if questionary.confirm("Are you sure you want to exit?", style=custom_style, auto_enter=False).ask():
         questionary.print("Bye Bye! 🦄", style=feedback_style)
-        teardown_db()
-        global enter
-        enter = False
+        global stop
+        stop = True
 
 
 def __admin_tasks(db, active_user: str):
@@ -422,7 +421,8 @@ def __admin_tasks(db, active_user: str):
                 remove_user(db, active_user, user_name)
         else:
             in_admin_tasks = False
-            __exit_program()
+            global enter
+            enter = False
 
 
 def __create_list_of_habits_properties(db, user_name: str, is_active: bool) -> list:

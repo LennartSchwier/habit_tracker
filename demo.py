@@ -88,7 +88,6 @@ def cli():
             elif choice == home_choices["exit"]:
                 enter = False
         else:
-            stop = True
             __exit_program()
 
 
@@ -286,13 +285,13 @@ def __pause_reactivate_habit(db, user_name: str):
         all_active_habits = get_all_habits(db, user_name, True)
         global all_inactive_habits
         all_inactive_habits = get_all_habits(db, user_name, False)
-        if all_active_habits and not all_inactive_habits:       # Only active habits are stored
+        if all_active_habits and not all_inactive_habits:  # Only active habits are stored
             task = questionary.select("Please select:",
                                       choices=[choices["pause"], choices["return"]]).ask()
-        elif not all_active_habits and all_inactive_habits:     # Only inactive habits are stored
+        elif not all_active_habits and all_inactive_habits:  # Only inactive habits are stored
             task = questionary.select("Please select:",
                                       choices=[choices["reactivate"], choices["return"]]).ask()
-        else:                                                   # Active and inactive habits are stored
+        else:  # Active and inactive habits are stored
             task = questionary.select("Please select:",
                                       choices=[choices["pause"], choices["reactivate"], choices["return"]]).ask()
         if task == choices["pause"]:
@@ -400,13 +399,13 @@ def __analyse_all_my_habits(db):
 
 
 def __exit_program():
-    # Terminates the program after asking for user confirmation"""
+    # Terminates the program after asking for user confirmation.
     if questionary.confirm("Are you sure you want to exit?", style=custom_style, auto_enter=False).ask():
         questionary.print("Bye Bye! 🦄", style=feedback_style)
         # Deletes the demo database after program termination
         teardown_db()
-#        global enter
-#        enter = False
+        global stop
+        stop = True
 
 
 def __admin_tasks(db, active_user: str):
