@@ -2,14 +2,14 @@
 Contains functions to set up and teardown a test database.
 
 Functions:
-    setup_db()
+    setup_demo_db()
         Connects to a sqlite3 database and stores various habits, tasks, and users in it.
     teardown_db()
         Deletes the test database file.
 
 Var:
     db_name: str
-        Name of the test database
+        Name of the demo database
 """
 import uuid
 import hashlib
@@ -17,10 +17,10 @@ import os
 from datetime import datetime, timedelta
 from db import get_db
 
-db_name = "test.db"
+db_name = "demo.db"
 
 
-def setup_db():
+def setup_demo_db():
     """
     Connects to a sqlite3 database and stores various habits, tasks, and users in it.
 
