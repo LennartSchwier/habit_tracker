@@ -75,6 +75,20 @@ def setup_demo_db():
     for value in days_since_completed:
         __store_task(db, value, "see the dentist")
 
+    __store_habit(
+        db=db,
+        habit_name="learn statistics",
+        user_name="test user 1",
+        created=datetime.now().replace(microsecond=0) - timedelta(days=50),
+        period=7,
+        deadline=datetime.now().replace(microsecond=0) + timedelta(days=4),
+        is_active=True,
+        longest=8
+    )
+    days_since_completed = [35, 30, 26, 21, 18, 12, 8, 3]
+    for value in days_since_completed:
+        __store_task(db, value, "learn statistics")
+
     return db
 
 
