@@ -26,8 +26,9 @@ Vars:
 import questionary
 import hashlib
 import uuid
+from setup import setup_demo_db, teardown_db
 from db_logic import add_habit, remove_habit, \
-    update_streaks, get_habit_by_name, get_all_habits, update_active_status, get_all_tasks, connect_to_db
+    update_streaks, get_habit_by_name, get_all_habits, update_active_status, get_all_tasks
 from user_logic import add_user, get_user_by_name, validate_password, get_all_users, remove_user
 from analysis import analyse_habits
 from custom_exceptions import HabitSaveError, HabitUpdateError, HabitDeletionError
@@ -59,7 +60,7 @@ home_choices = {
 def cli():
     """Controls all functionalities of the questionary cli."""
 
-    db = connect_to_db()
+    db = setup_demo_db()
 
     questionary.print("Hello there and welcome to the Habit Tracker! 🤖", style=feedback_style)
     global stop
@@ -284,13 +285,13 @@ def __pause_reactivate_habit(db, user_name: str):
         all_active_habits = get_all_habits(db, user_name, True)
         global all_inactive_habits
         all_inactive_habits = get_all_habits(db, user_name, False)
-        if all_active_habits and not all_inactive_habits:       # Only active habits are stored
+        if all_active_habits and not all_inactive_habits:  # Only active habits are stored
             task = questionary.select("Please select:",
                                       choices=[choices["pause"], choices["return"]]).ask()
-        elif not all_active_habits and all_inactive_habits:     # Only inactive habits are stored
+        elif not all_active_habits and all_inactive_habits:  # Only inactive habits are stored
             task = questionary.select("Please select:",
                                       choices=[choices["reactivate"], choices["return"]]).ask()
-        else:                                                   # Active and inactive habits are stored
+        else:  # Active and inactive habits are stored
             task = questionary.select("Please select:",
                                       choices=[choices["pause"], choices["reactivate"], choices["return"]]).ask()
         if task == choices["pause"]:
@@ -401,6 +402,8 @@ def __exit_program():
     # Terminates the program after asking for user confirmation.
     if questionary.confirm("Are you sure you want to exit?", style=custom_style, auto_enter=False).ask():
         questionary.print("Bye Bye! 🦄", style=feedback_style)
+        # Deletes the demo database after program termination
+        teardown_db()
         global stop
         stop = True
 
