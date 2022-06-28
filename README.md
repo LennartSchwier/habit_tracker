@@ -16,10 +16,12 @@ git clone https://github.com/LennartSchwier/habit_tracker.git
 ```
 
 2. Initialize a virtual environment 
-(click [here](https://www.pythonforbeginners.com/basics/how-to-use-python-virtualenv) if you need help) 
+(click [here](https://www.pythonforbeginners.com/basics/how-to-use-python-virtualenv) if you need help),
+move into the program's directory 
 and install all requirements: 
 
 ```
+cd habit_tracker
 pip install -r requirements.txt
 ```
 
