@@ -249,12 +249,11 @@ class TestHabits:
         else:
             pytest.fail()
 
-        # Test that the habit is updated correctly (deadline and longest_streak)
+        # Test that the longest streak of the habit is updated correctly
         assert test_habit.deadline is self.deadline
         assert test_habit.current_streak == 0 and test_habit.longest_streak == 0
         update_streaks(self.db, test_habit.name, "test user")
         received_object = get_habit_by_name(self.db, test_habit.name, "test user")
-        assert received_object.deadline == self.deadline + timedelta(days=test_habit.period)
         assert received_object.current_streak == 1 and received_object.longest_streak == 1
 
         # Test that the habit active status is changed to inactive in the database
