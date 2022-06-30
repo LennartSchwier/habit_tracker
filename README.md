@@ -15,14 +15,13 @@ Now you are ready to install the application.
 git clone https://github.com/LennartSchwier/habit_tracker.git
 ```
 
-2. Initialize a virtual environment 
-(click [here](https://www.pythonforbeginners.com/basics/how-to-use-python-virtualenv) if you need help),
-move into the program's directory 
-and install all requirements: 
+2. Initialization of a virtual environment and installation of requirements:
+   1. Installs `virtualenv` package
+   2. Creates a virtual environment in subdirectory `habit_tracker_venv` and activates it.
+   3. Installs `pytest` and `questionary` packages
 
 ```
-cd habit_tracker
-pip install -r requirements.txt
+source init.sh
 ```
 
 3. Run the program: 
