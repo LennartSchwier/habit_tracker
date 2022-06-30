@@ -3,7 +3,7 @@
 
 
 ## How to get started
-This application runs with Pyton 3.x and is controlled through a command line interface.
+This application runs with Python 3.x and is controlled through a command line interface.
 To install the latest version of Python 3 please visit [Python Downloads](https://www.python.org/downloads/)
 and follow the instructions.
 
