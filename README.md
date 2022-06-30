@@ -21,7 +21,7 @@ git clone https://github.com/LennartSchwier/habit_tracker.git
    3. Installs `pytest` and `questionary` packages
 
 ```
-source init.sh
+source habit_tracker/init.sh
 ```
 
 3. Run the program: 
