@@ -1,5 +1,9 @@
 """
-Contains the main module of the habit program.
+Contains the demo module of the habit program.
+
+This module serves as a top-level code environment and is similar to the main.py module,
+except that it sets up a demo database which is filled with different users and habits
+to demonstrate the program functionalities to the user.
 
 Function:
     cli()
