@@ -3,7 +3,7 @@
 # Initializing virtual environment
 echo "Initializing virtual environment..."
 pip install virtualenv
-cd project_folder || exit
+cd habit_tracker || exit
 virtualenv habit_tracker_venv
 source habit_tracker_venv/bin/activate
 if [[ -e habit_tracker_venv ]]
