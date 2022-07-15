@@ -8,7 +8,6 @@ To install the latest version of Python 3 please visit [Python Downloads](https:
 and follow the instructions.
 
 ### Installation and program start:
-Now you are ready to install the application.
 1. Clone the repository into a folder of your choice:
 
 ```
